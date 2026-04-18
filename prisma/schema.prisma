@@ -1,0 +1,163 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String    // hashed password
+  name          String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  audits        Audit[]
+  googleAccount GoogleAccount?
+  gscProperties GscProperty[]
+}
+
+model GoogleAccount {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  googleEmail    String
+  accessToken    String
+  refreshToken   String
+  tokenExpiresAt DateTime
+  scope          String   @default("")
+  connectedAt    DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  properties GscProperty[]
+}
+
+model GscProperty {
+  id              String   @id @default(cuid())
+  userId          String
+  googleAccountId String
+  siteUrl         String   // e.g. "sc-domain:example.com" or "https://example.com/"
+  permissionLevel String   @default("") // siteOwner | siteFullUser | siteRestrictedUser
+  addedAt         DateTime @default(now())
+
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  googleAccount GoogleAccount @relation(fields: [googleAccountId], references: [id], onDelete: Cascade)
+  snapshots     GscSnapshot[]
+
+  @@index([userId])
+  @@unique([googleAccountId, siteUrl])
+}
+
+model GscSnapshot {
+  id               String   @id @default(cuid())
+  propertyId       String
+  rangeStart       DateTime
+  rangeEnd         DateTime
+  totalImpressions Int      @default(0)
+  totalClicks      Int      @default(0)
+  avgCtr           Float    @default(0)
+  avgPosition      Float    @default(0)
+  byDate           String   @default("[]")   // JSON
+  byQuery          String   @default("[]")   // JSON
+  byPage           String   @default("[]")   // JSON
+  suggestions      String   @default("null") // JSON, null until generated
+  fetchedAt        DateTime @default(now())
+
+  property GscProperty @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([propertyId])
+}
+
+model Audit {
+  id            String        @id @default(cuid())
+  userId        String
+  domain        String
+  country       String        @default("US")
+  language      String        @default("en")
+  businessType  String        @default("")
+  goals         String        @default("[]") // JSON array
+  priorityPages String        @default("[]") // JSON array
+  competitors   String        @default("[]") // JSON array
+  cmsStack      String        @default("")
+  maxPages      Int           @default(50)
+  status        String        @default("pending") // pending, crawling, analyzing, complete, error
+  overallScore  Float?
+  errorMessage  String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  crawlResults  CrawlResult[]
+  findings      Finding[]
+  report        AuditReport?
+
+  @@index([userId])
+}
+
+model CrawlResult {
+  id             String   @id @default(cuid())
+  auditId        String
+  url            String
+  statusCode     Int
+  title          String   @default("")
+  metaDescription String  @default("")
+  canonical      String   @default("")
+  h1             String   @default("")
+  headings       String   @default("[]") // JSON
+  links          String   @default("[]") // JSON
+  images         String   @default("[]") // JSON
+  structuredData String   @default("[]") // JSON
+  issues         String   @default("[]") // JSON
+  responseTime   Int      @default(0) // ms
+  contentLength  Int      @default(0)
+  robotsMeta     String   @default("")
+  createdAt      DateTime @default(now())
+
+  audit Audit @relation(fields: [auditId], references: [id], onDelete: Cascade)
+
+  @@index([auditId])
+}
+
+model Finding {
+  id             String   @id @default(cuid())
+  auditId        String
+  category       String   // technical, on-page, content, ux-performance
+  issue          String
+  evidence       String   @default("")
+  affectedUrls   String   @default("[]") // JSON array
+  severity       String   // critical, high, medium, low
+  impact         String   @default("")
+  recommendedFix String   @default("")
+  owner          String   @default("") // dev, content, marketing
+  effort         String   @default("") // low, medium, high
+  priority       Int      @default(0)
+  createdAt      DateTime @default(now())
+
+  audit Audit @relation(fields: [auditId], references: [id], onDelete: Cascade)
+
+  @@index([auditId])
+}
+
+model AuditReport {
+  id                String   @id @default(cuid())
+  auditId           String   @unique
+  executiveSummary  String   @default("{}") // JSON
+  scorecard         String   @default("{}") // JSON
+  roadmap           String   @default("{}") // JSON
+  kpiPlan           String   @default("{}") // JSON
+  actionItems       String   @default("[]") // JSON
+  stakeholderSummary String  @default("")
+  devTaskList       String   @default("[]") // JSON
+  createdAt         DateTime @default(now())
+
+  audit Audit @relation(fields: [auditId], references: [id], onDelete: Cascade)
+}
+
+model Settings {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String @default("")
+}
