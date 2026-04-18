@@ -125,7 +125,7 @@ Respond ONLY with valid JSON. No markdown formatting, no code blocks.`;
     system:
       "You are an expert SEO analyst. Always return valid JSON matching the requested schema, with no extra commentary or markdown.",
     user: prompt,
-    maxTokens: 4096,
+    maxTokens: 2000,
   });
 
   // Parse JSON response

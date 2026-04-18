@@ -81,11 +81,14 @@ model Audit {
   goals         String        @default("[]") // JSON array
   priorityPages String        @default("[]") // JSON array
   competitors   String        @default("[]") // JSON array
+  seedKeywords  String        @default("[]") // JSON array
   cmsStack      String        @default("")
   maxPages      Int           @default(50)
   status        String        @default("pending") // pending, crawling, analyzing, complete, error
   overallScore  Float?
   errorMessage  String?
+  keywordReport String?       // JSON, filled by /api/audit/[id]/keywords
+  competitorReport String?    // JSON, filled by /api/audit/[id]/competitors
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
@@ -93,8 +96,34 @@ model Audit {
   crawlResults  CrawlResult[]
   findings      Finding[]
   report        AuditReport?
+  cwvResults    CwvResult[]
 
   @@index([userId])
+}
+
+model CwvResult {
+  id               String   @id @default(cuid())
+  auditId          String
+  url              String
+  strategy         String   // "mobile" | "desktop"
+  performanceScore Float?   // 0-100
+  accessibilityScore Float?
+  seoScore         Float?
+  bestPracticesScore Float?
+  lcpMs            Int?     // Largest Contentful Paint (ms)
+  fcpMs            Int?     // First Contentful Paint
+  clsScore         Float?   // Cumulative Layout Shift (unitless)
+  inpMs            Int?     // Interaction to Next Paint (field metric) or TBT fallback
+  ttfbMs           Int?     // Time to First Byte
+  speedIndex       Int?
+  fieldData        String   @default("null") // JSON: CrUX origin / URL-level field metrics
+  topIssues        String   @default("[]")   // JSON: [{id, title, description, savingsMs}]
+  fetchedAt        DateTime @default(now())
+
+  audit Audit @relation(fields: [auditId], references: [id], onDelete: Cascade)
+
+  @@index([auditId])
+  @@unique([auditId, url, strategy])
 }
 
 model CrawlResult {

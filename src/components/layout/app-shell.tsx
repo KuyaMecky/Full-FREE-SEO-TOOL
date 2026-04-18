@@ -14,6 +14,12 @@ import {
   BarChart3,
   Menu,
   X,
+  Zap,
+  KeyRound,
+  Users,
+  Target,
+  FileCode,
+  Gauge,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -32,12 +38,42 @@ interface UserData {
   name: string | null;
 }
 
-const NAV_ITEMS = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard, exact: true },
-  { href: "/properties", label: "Properties", icon: LineChart },
-  { href: "/audit/new", label: "New Audit", icon: Search },
-  { href: "/history", label: "History", icon: History },
-  { href: "/settings", label: "Settings", icon: Settings },
+interface NavItem {
+  href: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  exact?: boolean;
+}
+
+const NAV_SECTIONS: Array<{ label?: string; items: NavItem[] }> = [
+  {
+    items: [
+      { href: "/", label: "Dashboard", icon: LayoutDashboard, exact: true },
+      { href: "/properties", label: "Properties", icon: LineChart },
+      { href: "/quick-wins", label: "Quick Wins", icon: Target },
+    ],
+  },
+  {
+    label: "Research",
+    items: [
+      { href: "/performance", label: "Performance", icon: Gauge },
+      { href: "/keywords", label: "Keywords", icon: KeyRound },
+      { href: "/competitors", label: "Competitors", icon: Users },
+      { href: "/onpage", label: "On-page", icon: Zap },
+      { href: "/schema", label: "Schema", icon: FileCode },
+    ],
+  },
+  {
+    label: "Audits",
+    items: [
+      { href: "/audit/new", label: "New Audit", icon: Search },
+      { href: "/history", label: "History", icon: History },
+    ],
+  },
+  {
+    label: "System",
+    items: [{ href: "/settings", label: "Settings", icon: Settings }],
+  },
 ];
 
 const AUTH_PAGES = new Set(["/login", "/register"]);
@@ -143,28 +179,40 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <span className="font-semibold text-sm">SEO Audit Pro</span>
         </div>
 
-        <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-          {NAV_ITEMS.map((item) => {
-            const isActive = item.exact
-              ? pathname === item.href
-              : pathname === item.href || pathname.startsWith(`${item.href}/`);
-            const Icon = item.icon;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm transition-colors",
-                  isActive
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                    : "text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
-                )}
-              >
-                <Icon className="h-4 w-4" />
-                {item.label}
-              </Link>
-            );
-          })}
+        <nav className="flex-1 px-3 py-4 space-y-4 overflow-y-auto">
+          {NAV_SECTIONS.map((section, i) => (
+            <div key={i}>
+              {section.label && (
+                <div className="px-2.5 mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/50">
+                  {section.label}
+                </div>
+              )}
+              <div className="space-y-0.5">
+                {section.items.map((item) => {
+                  const isActive = item.exact
+                    ? pathname === item.href
+                    : pathname === item.href ||
+                      pathname.startsWith(`${item.href}/`);
+                  const Icon = item.icon;
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={cn(
+                        "flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm transition-colors",
+                        isActive
+                          ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                          : "text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
+                      )}
+                    >
+                      <Icon className="h-4 w-4" />
+                      {item.label}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </nav>
 
         <div className="p-3 border-t border-sidebar-border">
@@ -257,6 +305,12 @@ function getPageTitle(pathname: string): string {
   if (pathname === "/properties") return "Properties";
   if (pathname.startsWith("/properties/connect")) return "Properties · Connect";
   if (pathname.startsWith("/properties/")) return "Properties · Detail";
+  if (pathname === "/performance") return "Performance";
+  if (pathname === "/keywords") return "Keywords";
+  if (pathname === "/competitors") return "Competitors";
+  if (pathname === "/quick-wins") return "Quick Wins";
+  if (pathname === "/onpage") return "On-page Analyzer";
+  if (pathname === "/schema") return "Schema Generator";
   if (pathname === "/audit/new") return "New Audit";
   if (pathname.startsWith("/audit/")) return "Audit · Detail";
   if (pathname === "/history") return "History";
