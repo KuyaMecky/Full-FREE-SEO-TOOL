@@ -18,7 +18,7 @@ export function ExecutiveSummary({ summary }: ExecutiveSummaryProps) {
           <CardTitle>Overview</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-gray-700 leading-relaxed">{summary.overview}</p>
+          <p className="text-foreground/80 leading-relaxed">{summary.overview}</p>
         </CardContent>
       </Card>
 
@@ -33,7 +33,7 @@ export function ExecutiveSummary({ summary }: ExecutiveSummaryProps) {
           <CardContent>
             <ul className="space-y-2">
               {summary.keyFindings.slice(0, 5).map((finding, i) => (
-                <li key={i} className="text-sm text-gray-600 flex items-start gap-2">
+                <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
                   <span className="text-blue-500 mt-1">•</span>
                   {finding}
                 </li>
@@ -52,7 +52,7 @@ export function ExecutiveSummary({ summary }: ExecutiveSummaryProps) {
           <CardContent>
             <ul className="space-y-2">
               {summary.topOpportunities.slice(0, 3).map((opp, i) => (
-                <li key={i} className="text-sm text-gray-600 flex items-start gap-2">
+                <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
                   <span className="text-yellow-500 mt-1">•</span>
                   {opp}
                 </li>
@@ -71,7 +71,7 @@ export function ExecutiveSummary({ summary }: ExecutiveSummaryProps) {
           <CardContent>
             <ul className="space-y-2">
               {summary.riskAreas.map((risk, i) => (
-                <li key={i} className="text-sm text-gray-600 flex items-start gap-2">
+                <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
                   <span className="text-red-500 mt-1">•</span>
                   {risk}
                 </li>

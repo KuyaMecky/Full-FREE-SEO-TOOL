@@ -75,7 +75,7 @@ export function FindingsTable({ findings }: FindingsTableProps) {
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/70" />
           <Input
             placeholder="Search findings..."
             value={search}
@@ -126,7 +126,7 @@ export function FindingsTable({ findings }: FindingsTableProps) {
               <TableRow>
                 <TableCell
                   colSpan={6}
-                  className="text-center text-gray-500 py-8"
+                  className="text-center text-muted-foreground py-8"
                 >
                   No findings match your filters
                 </TableCell>
@@ -136,7 +136,7 @@ export function FindingsTable({ findings }: FindingsTableProps) {
                 <>
                   <TableRow
                     key={index}
-                    className="cursor-pointer hover:bg-gray-50"
+                    className="cursor-pointer hover:bg-muted/40"
                     onClick={() => toggleRow(index)}
                   >
                     <TableCell>
@@ -163,28 +163,28 @@ export function FindingsTable({ findings }: FindingsTableProps) {
                     </TableCell>
                   </TableRow>
                   {expandedRows.has(index) && (
-                    <TableRow className="bg-gray-50">
+                    <TableRow className="bg-muted/40">
                       <TableCell colSpan={6} className="p-4">
                         <div className="space-y-3">
                           <div>
-                            <p className="text-sm font-medium text-gray-700">
+                            <p className="text-sm font-medium text-foreground/80">
                               Evidence:
                             </p>
-                            <p className="text-sm text-gray-600">
+                            <p className="text-sm text-muted-foreground">
                               {finding.evidence}</p>
                           </div>
                           <div>
-                            <p className="text-sm font-medium text-gray-700">
+                            <p className="text-sm font-medium text-foreground/80">
                               Impact:
                             </p>
-                            <p className="text-sm text-gray-600">
+                            <p className="text-sm text-muted-foreground">
                               {finding.impact}</p>
                           </div>
                           <div>
-                            <p className="text-sm font-medium text-gray-700">
+                            <p className="text-sm font-medium text-foreground/80">
                               Recommended Fix:
                             </p>
-                            <p className="text-sm text-gray-600">
+                            <p className="text-sm text-muted-foreground">
                               {finding.recommendedFix}</p>
                           </div>
                           <div className="flex gap-4 text-sm">
@@ -199,17 +199,17 @@ export function FindingsTable({ findings }: FindingsTableProps) {
                           </div>
                           {finding.affectedUrls.length > 0 && (
                             <div>
-                              <p className="text-sm font-medium text-gray-700">
+                              <p className="text-sm font-medium text-foreground/80">
                                 Affected URLs:
                               </p>
-                              <ul className="text-sm text-gray-600 space-y-1 mt-1">
+                              <ul className="text-sm text-muted-foreground space-y-1 mt-1">
                                 {finding.affectedUrls.slice(0, 5).map((url, i) => (
                                   <li key={i} className="font-mono text-xs">
                                     {url}
                                   </li>
                                 ))}
                                 {finding.affectedUrls.length > 5 && (
-                                  <li className="text-gray-500">
+                                  <li className="text-muted-foreground">
                                     ...and {finding.affectedUrls.length - 5} more
                                   </li>
                                 )}
@@ -227,7 +227,7 @@ export function FindingsTable({ findings }: FindingsTableProps) {
         </Table>
       </div>
 
-      <p className="text-sm text-gray-500">
+      <p className="text-sm text-muted-foreground">
         Showing {filteredFindings.length} of {findings.length} findings
       </p>
     </div>

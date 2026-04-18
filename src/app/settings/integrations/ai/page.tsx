@@ -190,7 +190,7 @@ export default function AIIntegrationSettingsPage() {
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <Link
         href="/settings"
-        className="inline-flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 mb-2"
+        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-2"
       >
         <ChevronLeft className="h-4 w-4" />
         Settings
@@ -199,7 +199,7 @@ export default function AIIntegrationSettingsPage() {
         <Sparkles className="h-7 w-7 text-purple-600" />
         AI Provider
       </h1>
-      <p className="text-gray-600 mb-6">
+      <p className="text-muted-foreground mb-6">
         Choose which LLM powers audit reports and GSC suggestions. You can save
         keys for multiple providers and switch between them.
       </p>
@@ -219,10 +219,10 @@ export default function AIIntegrationSettingsPage() {
       )}
 
       {status.configured && (
-        <Card className="mb-6 border-green-200 bg-green-50">
+        <Card className="mb-6 border-emerald-500/30 bg-emerald-500/10">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
-              <Check className="h-5 w-5 text-green-600" />
+              <Check className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
               Active: {PROVIDER_INFO[status.provider].label}
               <Badge variant="outline" className="ml-2 font-mono text-xs">
                 {status.model}
@@ -269,17 +269,17 @@ export default function AIIntegrationSettingsPage() {
                   }}
                   className={`border rounded-md p-4 text-left transition-colors ${
                     isActive
-                      ? "border-blue-500 bg-blue-50"
-                      : "border-gray-200 hover:border-gray-300"
+                      ? "border-blue-500 bg-primary/10"
+                      : "border-border hover:border-border"
                   }`}
                 >
                   <div className="flex items-center justify-between mb-1">
                     <div className="font-medium">{info.label}</div>
                     {hasKey && (
-                      <Check className="h-4 w-4 text-green-600" />
+                      <Check className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                     )}
                   </div>
-                  <div className="text-xs text-gray-500 font-mono">
+                  <div className="text-xs text-muted-foreground font-mono">
                     {status.defaultModels[p]}
                   </div>
                   {status.provider === p && (
@@ -313,12 +313,12 @@ export default function AIIntegrationSettingsPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           {selected === "openrouter" && (
-            <div className="rounded-md border border-blue-200 bg-blue-50 p-4 space-y-3">
+            <div className="rounded-md border border-blue-500/30 bg-primary/10 p-4 space-y-3">
               <div>
-                <div className="font-medium text-blue-900">
+                <div className="font-medium text-blue-700 dark:text-blue-300">
                   Sign in with OpenRouter (recommended)
                 </div>
-                <p className="text-sm text-blue-800 mt-1">
+                <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
                   Log in to your OpenRouter account and we&apos;ll pull in an API
                   key automatically — no manual copy-paste.
                 </p>
@@ -331,7 +331,7 @@ export default function AIIntegrationSettingsPage() {
               </a>
               <div className="flex items-center gap-3 pt-1">
                 <Separator className="flex-1" />
-                <span className="text-xs text-blue-700 uppercase tracking-wide">
+                <span className="text-xs text-primary uppercase tracking-wide">
                   or paste manually
                 </span>
                 <Separator className="flex-1" />
@@ -358,7 +358,7 @@ export default function AIIntegrationSettingsPage() {
               }
               className="mt-1 font-mono text-sm"
             />
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Stored in the local SQLite database. Only sent to the provider
               when making a request.
             </p>
@@ -367,7 +367,7 @@ export default function AIIntegrationSettingsPage() {
           <div>
             <Label htmlFor="model">
               Model{" "}
-              <span className="text-gray-500 font-normal">
+              <span className="text-muted-foreground font-normal">
                 (optional — defaults to{" "}
                 <code className="font-mono text-xs">
                   {status.defaultModels[selected]}

@@ -129,10 +129,10 @@ export default function AuditDashboardPage() {
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">
+            <h1 className="text-3xl font-bold text-foreground">
               Audit: {audit.domain}
             </h1>
-            <p className="text-gray-600 mt-1">
+            <p className="text-muted-foreground mt-1">
               Started {new Date(audit.createdAt).toLocaleDateString()}
             </p>
           </div>
@@ -197,7 +197,7 @@ export default function AuditDashboardPage() {
                   <CardTitle>Stakeholder Summary</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-gray-700 leading-relaxed">
+                  <p className="text-foreground/80 leading-relaxed">
                     {audit.report.stakeholderSummary}
                   </p>
                 </CardContent>
@@ -224,7 +224,7 @@ export default function AuditDashboardPage() {
                     {audit.report.devTaskList.map((task, index) => (
                       <div
                         key={index}
-                        className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg"
+                        className="flex items-start gap-3 p-3 bg-muted/40 rounded-lg"
                       >
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
@@ -241,10 +241,10 @@ export default function AuditDashboardPage() {
                               {task.priority}
                             </span>
                           </div>
-                          <p className="text-sm text-gray-600 mt-1">
+                          <p className="text-sm text-muted-foreground mt-1">
                             {task.details}
                           </p>
-                          <p className="text-xs text-gray-500 mt-1">
+                          <p className="text-xs text-muted-foreground mt-1">
                             Effort: {task.effort}
                           </p>
                         </div>
@@ -261,7 +261,7 @@ export default function AuditDashboardPage() {
       {!isComplete && !isCrawling && !isAnalyzing && !isError && (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
-            <p className="text-gray-600 mb-4">Ready to start crawling {audit.domain}</p>
+            <p className="text-muted-foreground mb-4">Ready to start crawling {audit.domain}</p>
             <Button onClick={startCrawl} size="lg">Start SEO Audit</Button>
           </CardContent>
         </Card>

@@ -128,13 +128,13 @@ export default function GoogleIntegrationSettingsPage() {
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <Link
         href="/settings"
-        className="inline-flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 mb-2"
+        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-2"
       >
         <ChevronLeft className="h-4 w-4" />
         Settings
       </Link>
       <h1 className="text-3xl font-bold mb-2">Google Search Console</h1>
-      <p className="text-gray-600 mb-6">
+      <p className="text-muted-foreground mb-6">
         Connect the app to the Google Search Console API so you (and anyone using
         this install) can pull impressions, clicks, keyword rankings, and page
         metrics.
@@ -155,10 +155,10 @@ export default function GoogleIntegrationSettingsPage() {
       )}
 
       {status?.configured && (
-        <Card className="mb-6 border-green-200 bg-green-50">
+        <Card className="mb-6 border-emerald-500/30 bg-emerald-500/10">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
-              <Check className="h-5 w-5 text-green-600" />
+              <Check className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
               Connected
               <Badge variant="outline" className="ml-2 font-mono text-xs">
                 source: {status.source}
@@ -199,7 +199,7 @@ export default function GoogleIntegrationSettingsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <ol className="list-decimal pl-5 space-y-3 text-sm text-gray-700">
+          <ol className="list-decimal pl-5 space-y-3 text-sm text-foreground/80">
             <li>
               Open{" "}
               <a
@@ -228,7 +228,7 @@ export default function GoogleIntegrationSettingsPage() {
               Left sidebar → <strong>APIs &amp; Services → Credentials</strong> →{" "}
               <strong>+ Create Credentials</strong> →{" "}
               <strong>OAuth client ID</strong>.
-              <ul className="list-disc pl-5 mt-2 space-y-1 text-gray-600">
+              <ul className="list-disc pl-5 mt-2 space-y-1 text-muted-foreground">
                 <li>
                   Application type: <strong>Web application</strong>
                 </li>
@@ -244,7 +244,7 @@ export default function GoogleIntegrationSettingsPage() {
           <div className="mt-4">
             <Label>Authorized redirect URI (paste this into Google)</Label>
             <div className="flex items-center gap-2 mt-1">
-              <code className="flex-1 text-sm bg-gray-100 px-3 py-2 rounded font-mono break-all">
+              <code className="flex-1 text-sm bg-muted px-3 py-2 rounded font-mono break-all">
                 {status?.redirectUri}
               </code>
               <Button
@@ -300,7 +300,7 @@ export default function GoogleIntegrationSettingsPage() {
               placeholder="GOCSPX-…"
               className="mt-1 font-mono text-sm"
             />
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Stored in the local SQLite database. Not sent anywhere except to
               Google during the OAuth handshake.
             </p>

@@ -38,12 +38,12 @@ export function HealthScorecard({ scorecard }: HealthScorecardProps) {
             <div className="flex flex-col items-center text-center">
               <div
                 className={`text-4xl font-bold mb-2 ${
-                  cat.key === "overall" ? "text-blue-600" : "text-gray-900"
+                  cat.key === "overall" ? "text-blue-600" : "text-foreground"
                 }`}
               >
                 {Math.round(cat.score)}
               </div>
-              <p className="text-sm text-gray-500 mb-2">{cat.label}</p>
+              <p className="text-sm text-muted-foreground mb-2">{cat.label}</p>
               <span
                 className={`text-xs px-2 py-1 rounded-full ${getScoreColor(
                   cat.score

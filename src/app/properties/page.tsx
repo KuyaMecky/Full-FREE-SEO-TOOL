@@ -14,7 +14,15 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ConnectGoogleButton } from "@/components/properties/connect-google-button";
-import { Plus, AlertCircle, LineChart as LineChartIcon } from "lucide-react";
+import {
+  Plus,
+  AlertCircle,
+  LineChart as LineChartIcon,
+  Eye,
+  MousePointerClick,
+  Percent,
+  TrendingUp,
+} from "lucide-react";
 
 interface PropertyListItem {
   id: string;
@@ -79,7 +87,7 @@ export default function PropertiesPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold">Properties</h1>
-          <p className="text-gray-600 mt-1">
+          <p className="text-muted-foreground mt-1">
             Track impressions, clicks, and keyword rankings from Google Search Console.
           </p>
         </div>
@@ -163,7 +171,9 @@ export default function PropertiesPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <>
+          <PortfolioSummary properties={properties} />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {properties.map((p) => (
             <Link key={p.id} href={`/properties/${p.id}`}>
               <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
@@ -182,25 +192,25 @@ export default function PropertiesPage() {
                   <CardContent>
                     <div className="grid grid-cols-2 gap-3 text-sm">
                       <div>
-                        <div className="text-gray-500 text-xs">Impressions</div>
+                        <div className="text-muted-foreground text-xs">Impressions</div>
                         <div className="font-semibold">
                           {p.latestSnapshot.totalImpressions.toLocaleString()}
                         </div>
                       </div>
                       <div>
-                        <div className="text-gray-500 text-xs">Clicks</div>
+                        <div className="text-muted-foreground text-xs">Clicks</div>
                         <div className="font-semibold">
                           {p.latestSnapshot.totalClicks.toLocaleString()}
                         </div>
                       </div>
                       <div>
-                        <div className="text-gray-500 text-xs">CTR</div>
+                        <div className="text-muted-foreground text-xs">CTR</div>
                         <div className="font-semibold">
                           {(p.latestSnapshot.avgCtr * 100).toFixed(2)}%
                         </div>
                       </div>
                       <div>
-                        <div className="text-gray-500 text-xs">Avg. Position</div>
+                        <div className="text-muted-foreground text-xs">Avg. Position</div>
                         <div className="font-semibold">
                           {p.latestSnapshot.avgPosition.toFixed(1)}
                         </div>
@@ -211,8 +221,93 @@ export default function PropertiesPage() {
               </Card>
             </Link>
           ))}
-        </div>
+          </div>
+        </>
       )}
+    </div>
+  );
+}
+
+function PortfolioSummary({ properties }: { properties: PropertyListItem[] }) {
+  const withSnapshot = properties.filter((p) => p.latestSnapshot);
+  if (withSnapshot.length === 0) return null;
+
+  const totalImpr = withSnapshot.reduce(
+    (s, p) => s + (p.latestSnapshot?.totalImpressions ?? 0),
+    0
+  );
+  const totalClicks = withSnapshot.reduce(
+    (s, p) => s + (p.latestSnapshot?.totalClicks ?? 0),
+    0
+  );
+  const avgCtr = totalImpr > 0 ? totalClicks / totalImpr : 0;
+  const avgPosition =
+    totalImpr > 0
+      ? withSnapshot.reduce(
+          (s, p) =>
+            s +
+            (p.latestSnapshot?.avgPosition ?? 0) *
+              (p.latestSnapshot?.totalImpressions ?? 0),
+          0
+        ) / totalImpr
+      : 0;
+
+  const items = [
+    {
+      label: "Total impressions",
+      value: totalImpr.toLocaleString(),
+      icon: Eye,
+    },
+    {
+      label: "Total clicks",
+      value: totalClicks.toLocaleString(),
+      icon: MousePointerClick,
+    },
+    {
+      label: "Weighted avg. CTR",
+      value: `${(avgCtr * 100).toFixed(2)}%`,
+      icon: Percent,
+    },
+    {
+      label: "Weighted avg. position",
+      value: avgPosition.toFixed(1),
+      icon: TrendingUp,
+    },
+  ];
+
+  return (
+    <div className="mb-6">
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+          Portfolio · {withSnapshot.length}{" "}
+          {withSnapshot.length === 1 ? "property" : "properties"}
+        </h2>
+        {withSnapshot.length < properties.length && (
+          <div className="text-xs text-muted-foreground">
+            {properties.length - withSnapshot.length} without data
+          </div>
+        )}
+      </div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {items.map((item) => {
+          const Icon = item.icon;
+          return (
+            <Card key={item.label}>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  {item.label}
+                </CardTitle>
+                <Icon className="h-4 w-4 text-muted-foreground/70" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold tabular-nums">
+                  {item.value}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
     </div>
   );
 }

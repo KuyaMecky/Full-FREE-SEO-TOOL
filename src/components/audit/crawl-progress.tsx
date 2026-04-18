@@ -116,7 +116,7 @@ export function CrawlProgress({ auditId, onComplete }: CrawlProgressProps) {
       <CardContent className="space-y-4">
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
-            <span className="text-gray-600">
+            <span className="text-muted-foreground">
               {progress.crawledPages} of {progress.totalPages} pages
             </span>
             <span className="font-medium">{percentage}%</span>
@@ -125,14 +125,14 @@ export function CrawlProgress({ auditId, onComplete }: CrawlProgressProps) {
         </div>
 
         <div className="space-y-1">
-          <p className="text-sm text-gray-500">Current URL:</p>
-          <p className="text-sm font-mono truncate text-gray-700">
+          <p className="text-sm text-muted-foreground">Current URL:</p>
+          <p className="text-sm font-mono truncate text-foreground/80">
             {progress.currentUrl}
           </p>
         </div>
 
         {!connected && progress.status === "crawling" && (
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-muted-foreground/70">
             Using polling fallback...
           </p>
         )}

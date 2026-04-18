@@ -21,18 +21,37 @@ export async function GET() {
           avgCtr: true,
           avgPosition: true,
           fetchedAt: true,
+          byDate: true,
         },
       },
     },
   });
 
-  const result = properties.map((p: typeof properties[number]) => ({
-    id: p.id,
-    siteUrl: p.siteUrl,
-    permissionLevel: p.permissionLevel,
-    addedAt: p.addedAt,
-    latestSnapshot: p.snapshots[0] ?? null,
-  }));
+  const result = properties.map((p: typeof properties[number]) => {
+    const snap = p.snapshots[0];
+    return {
+      id: p.id,
+      siteUrl: p.siteUrl,
+      permissionLevel: p.permissionLevel,
+      addedAt: p.addedAt,
+      latestSnapshot: snap
+        ? {
+            totalImpressions: snap.totalImpressions,
+            totalClicks: snap.totalClicks,
+            avgCtr: snap.avgCtr,
+            avgPosition: snap.avgPosition,
+            fetchedAt: snap.fetchedAt,
+            byDate: JSON.parse(snap.byDate || "[]") as Array<{
+              date: string;
+              impressions: number;
+              clicks: number;
+              ctr: number;
+              position: number;
+            }>,
+          }
+        : null,
+    };
+  });
 
   return NextResponse.json({ properties: result });
 }

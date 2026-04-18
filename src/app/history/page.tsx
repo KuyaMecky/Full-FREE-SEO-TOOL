@@ -79,7 +79,7 @@ export default function HistoryPage() {
   };
 
   const getScoreColor = (score: number | null) => {
-    if (score === null) return "text-gray-400";
+    if (score === null) return "text-muted-foreground/70";
     if (score >= 80) return "text-green-600";
     if (score >= 60) return "text-yellow-600";
     if (score >= 40) return "text-orange-600";
@@ -90,8 +90,8 @@ export default function HistoryPage() {
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Audit History</h1>
-          <p className="text-gray-600 mt-2">
+          <h1 className="text-3xl font-bold text-foreground">Audit History</h1>
+          <p className="text-muted-foreground mt-2">
             View and manage your previous SEO audits
           </p>
         </div>
@@ -113,8 +113,8 @@ export default function HistoryPage() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Search className="h-12 w-12 text-gray-300 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900">No audits yet</h3>
-            <p className="text-gray-500 mt-2 mb-4">
+            <h3 className="text-lg font-medium text-foreground">No audits yet</h3>
+            <p className="text-muted-foreground mt-2 mb-4">
               Get started by running your first SEO audit
             </p>
             <Link href="/audit/new">
@@ -130,7 +130,7 @@ export default function HistoryPage() {
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-3">
-                      <h3 className="text-lg font-semibold text-gray-900">
+                      <h3 className="text-lg font-semibold text-foreground">
                         {audit.domain}
                       </h3>
                       <Badge
@@ -139,14 +139,14 @@ export default function HistoryPage() {
                         {audit.status}
                       </Badge>
                     </div>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-sm text-muted-foreground mt-1">
                       Created {formatDate(audit.createdAt)}
                     </p>
                   </div>
 
                   <div className="flex items-center gap-6">
                     <div className="text-right">
-                      <p className="text-sm text-gray-500">Score</p>
+                      <p className="text-sm text-muted-foreground">Score</p>
                       <p
                         className={`text-2xl font-bold ${getScoreColor(audit.overallScore)}`}
                       >

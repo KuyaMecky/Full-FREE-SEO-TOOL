@@ -196,7 +196,7 @@ Produce up to 5 items per category. For titleRewrites, infer targetPage from the
   const text = await generateText({
     system: systemPrompt,
     user: userPrompt,
-    maxTokens: 4000,
+    maxTokens: 2000,
   });
 
   // Strip ```json fences if present

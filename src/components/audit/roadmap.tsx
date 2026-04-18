@@ -31,14 +31,14 @@ export function Roadmap({ roadmap }: RoadmapProps) {
               <CardTitle className="flex items-center gap-3">
                 <span className={`w-3 h-3 rounded-full ${phase.color}`} />
                 {phase.label}
-                <span className="text-sm font-normal text-gray-500">
+                <span className="text-sm font-normal text-muted-foreground">
                   ({phaseItems.length} tasks)
                 </span>
               </CardTitle>
             </CardHeader>
             <CardContent>
               {phaseItems.length === 0 ? (
-                <p className="text-gray-500 text-sm">
+                <p className="text-muted-foreground text-sm">
                   No tasks scheduled for this phase
                 </p>
               ) : (
@@ -49,12 +49,12 @@ export function Roadmap({ roadmap }: RoadmapProps) {
                       className="border-b last:border-0 pb-4 last:pb-0"
                     >
                       <div className="flex items-start justify-between">
-                        <h4 className="font-medium text-gray-900">{item.task}</h4>
+                        <h4 className="font-medium text-foreground">{item.task}</h4>
                         <Badge className={priorityColors[item.priority]}>
                           {item.priority}
                         </Badge>
                       </div>
-                      <div className="flex gap-4 mt-2 text-sm text-gray-600">
+                      <div className="flex gap-4 mt-2 text-sm text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <Users className="h-4 w-4" />
                           {item.owner}

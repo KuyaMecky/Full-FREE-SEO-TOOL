@@ -19,6 +19,7 @@ import {
   MetricRow,
 } from "@/components/properties/metrics-table";
 import { SuggestionsList } from "@/components/properties/suggestions-list";
+import { TopListCard } from "@/components/properties/top-list-card";
 import { RefreshCw, AlertCircle, Sparkles, ChevronLeft } from "lucide-react";
 import {
   DateRow,
@@ -49,6 +50,8 @@ interface Property {
   addedAt: string;
 }
 
+type TabValue = "overview" | "queries" | "pages" | "suggestions";
+
 export default function PropertyPage() {
   const params = useParams();
   const searchParams = useSearchParams();
@@ -60,6 +63,7 @@ export default function PropertyPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState("");
+  const [tab, setTab] = useState<TabValue>("overview");
 
   useEffect(() => {
     load();
@@ -176,7 +180,7 @@ export default function PropertyPage() {
       <div className="mb-6">
         <Link
           href="/properties"
-          className="inline-flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 mb-2"
+          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-2"
         >
           <ChevronLeft className="h-4 w-4" />
           All properties
@@ -185,7 +189,7 @@ export default function PropertyPage() {
           <div>
             <h1 className="text-2xl font-bold break-all">{property.siteUrl}</h1>
             {snapshot && (
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="text-sm text-muted-foreground mt-1">
                 Data: {snapshot.rangeStart} to {snapshot.rangeEnd} · refreshed{" "}
                 {new Date(snapshot.fetchedAt).toLocaleString()}
               </p>
@@ -209,13 +213,16 @@ export default function PropertyPage() {
 
       {!snapshot ? (
         <div className="rounded-md border border-dashed p-12 text-center">
-          <p className="text-gray-600 mb-4">
+          <p className="text-muted-foreground mb-4">
             No data yet. Click <span className="font-medium">Fetch data</span> to pull
             the last 28 days from Search Console.
           </p>
         </div>
       ) : (
-        <Tabs defaultValue="overview">
+        <Tabs
+          value={tab}
+          onValueChange={(v) => setTab(v as TabValue)}
+        >
           <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="queries">
@@ -237,6 +244,36 @@ export default function PropertyPage() {
               }}
             />
             <TrendChart byDate={snapshot.byDate} />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <TopListCard
+                title="Top queries"
+                description={`${snapshot.byQuery.length} total · top 10 by impressions`}
+                keyLabel="Query"
+                rows={snapshot.byQuery.map((q) => ({
+                  key: q.query,
+                  impressions: q.impressions,
+                  clicks: q.clicks,
+                  ctr: q.ctr,
+                  position: q.position,
+                }))}
+                onViewAll={() => setTab("queries")}
+                viewAllLabel="View all queries"
+              />
+              <TopListCard
+                title="Top pages"
+                description={`${snapshot.byPage.length} total · top 10 by impressions`}
+                keyLabel="Page"
+                rows={snapshot.byPage.map((p) => ({
+                  key: p.page,
+                  impressions: p.impressions,
+                  clicks: p.clicks,
+                  ctr: p.ctr,
+                  position: p.position,
+                }))}
+                onViewAll={() => setTab("pages")}
+                viewAllLabel="View all pages"
+              />
+            </div>
           </TabsContent>
 
           <TabsContent value="queries" className="mt-6">
@@ -266,7 +303,7 @@ export default function PropertyPage() {
               </div>
             ) : (
               <div className="rounded-md border border-dashed p-12 text-center">
-                <p className="text-gray-600 mb-4">
+                <p className="text-muted-foreground mb-4">
                   Generate AI suggestions based on your rank and CTR opportunities.
                 </p>
                 <Button

@@ -102,7 +102,7 @@ export function MetricsTable({ keyLabel, rows }: Props) {
           onChange={(e) => setFilter(e.target.value)}
           className="max-w-sm"
         />
-        <div className="text-sm text-gray-500">
+        <div className="text-sm text-muted-foreground">
           {sorted.length} {sorted.length === 1 ? "row" : "rows"}
         </div>
       </div>
@@ -139,7 +139,7 @@ export function MetricsTable({ keyLabel, rows }: Props) {
         </Table>
       </div>
       {sorted.length > 500 && (
-        <div className="text-sm text-gray-500">
+        <div className="text-sm text-muted-foreground">
           Showing first 500 of {sorted.length} rows. Use the filter to narrow.
         </div>
       )}

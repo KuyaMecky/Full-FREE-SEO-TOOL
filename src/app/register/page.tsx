@@ -119,7 +119,7 @@ export default function RegisterPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
-              <p className="text-xs text-gray-500">Must be at least 6 characters</p>
+              <p className="text-xs text-muted-foreground">Must be at least 6 characters</p>
             </div>
 
             <div className="space-y-2">
@@ -146,7 +146,7 @@ export default function RegisterPage() {
           </form>
 
           <div className="mt-6 text-center text-sm">
-            <p className="text-gray-600">
+            <p className="text-muted-foreground">
               Already have an account?{" "}
               <Link href="/login" className="text-blue-600 hover:underline">
                 Sign in
