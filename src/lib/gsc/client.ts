@@ -1,6 +1,7 @@
 import { GscSearchAnalyticsResponse, GscSitesResponse } from "./types";
 
 const GSC_BASE = "https://www.googleapis.com/webmasters/v3";
+const SC_BASE = "https://searchconsole.googleapis.com/v1";
 
 export interface SearchAnalyticsQuery {
   startDate: string; // YYYY-MM-DD
@@ -22,6 +23,66 @@ export async function listSites(
   if (!res.ok) {
     const text = await res.text();
     throw new Error(`listSites failed: ${res.status} ${text}`);
+  }
+
+  return res.json();
+}
+
+export interface UrlInspectionResult {
+  inspectionResult?: {
+    inspectionResultLink?: string;
+    indexStatusResult?: {
+      verdict?: string; // PASS | PARTIAL | FAIL | NEUTRAL
+      coverageState?: string;
+      robotsTxtState?: string;
+      indexingState?: string;
+      lastCrawlTime?: string;
+      pageFetchState?: string;
+      googleCanonical?: string;
+      userCanonical?: string;
+      sitemap?: string[];
+      referringUrls?: string[];
+      crawledAs?: string;
+    };
+    mobileUsabilityResult?: {
+      verdict?: string;
+      issues?: Array<{ issueType?: string; severity?: string; message?: string }>;
+    };
+    richResultsResult?: {
+      verdict?: string;
+      detectedItems?: Array<{
+        richResultType?: string;
+        items?: Array<{
+          name?: string;
+          issues?: Array<{ issueMessage?: string; severity?: string }>;
+        }>;
+      }>;
+    };
+  };
+}
+
+export async function inspectUrl(
+  accessToken: string,
+  siteUrl: string,
+  inspectionUrl: string,
+  languageCode = "en-US"
+): Promise<UrlInspectionResult> {
+  const res = await fetch(`${SC_BASE}/urlInspection/index:inspect`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      inspectionUrl,
+      siteUrl,
+      languageCode,
+    }),
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`URL inspection failed: ${res.status} ${text.slice(0, 300)}`);
   }
 
   return res.json();

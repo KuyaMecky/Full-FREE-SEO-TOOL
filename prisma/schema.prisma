@@ -43,12 +43,36 @@ model GscProperty {
   permissionLevel String   @default("") // siteOwner | siteFullUser | siteRestrictedUser
   addedAt         DateTime @default(now())
 
-  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  googleAccount GoogleAccount @relation(fields: [googleAccountId], references: [id], onDelete: Cascade)
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  googleAccount GoogleAccount     @relation(fields: [googleAccountId], references: [id], onDelete: Cascade)
   snapshots     GscSnapshot[]
+  submissions   IndexSubmission[]
 
   @@index([userId])
   @@unique([googleAccountId, siteUrl])
+}
+
+model IndexSubmission {
+  id                String   @id @default(cuid())
+  userId            String
+  propertyId        String
+  url               String
+  note              String   @default("")
+  status            String   @default("pending") // pending | requested | indexed | not_indexed | error
+  lastIndexVerdict  String?  // PASS | PARTIAL | FAIL | NEUTRAL from inspect
+  lastCoverageState String?
+  lastFetchState    String?
+  lastCrawlTime     DateTime?
+  lastCheckedAt     DateTime?
+  submittedAt       DateTime @default(now())
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  property GscProperty @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([propertyId])
+  @@unique([propertyId, url])
 }
 
 model GscSnapshot {
