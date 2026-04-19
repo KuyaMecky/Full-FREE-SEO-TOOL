@@ -27,6 +27,9 @@ import {
   Search,
   TrendingUp,
 } from "lucide-react";
+import { PageHeader } from "@/components/page-header";
+import { HelpBanner } from "@/components/help-banner";
+import { GUIDES } from "@/lib/guides";
 
 interface QuickWin {
   propertyId: string;
@@ -143,17 +146,13 @@ export default function QuickWinsPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold flex items-center gap-2">
-          <Target className="h-7 w-7 text-emerald-500" />
-          Quick Wins
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          Queries that are already ranking positions 4-20 with real impressions,
-          across every connected Search Console property. These are your
-          fastest opportunities to move onto page 1.
-        </p>
-      </div>
+      <PageHeader
+        icon={Target}
+        title="Quick Wins"
+        accent="emerald"
+        description="Queries ranking positions 4-20 with real impressions across every connected property. Your fastest opportunities to move onto page 1."
+      />
+      <HelpBanner guideKey="quickWins" guide={GUIDES.quickWins} />
 
       {loading ? (
         <div className="space-y-3">
