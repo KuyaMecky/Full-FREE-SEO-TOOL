@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+export const dynamic = "force-dynamic";
+
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -53,6 +55,14 @@ interface Property {
 type TabValue = "overview" | "queries" | "pages" | "suggestions";
 
 export default function PropertyPage() {
+  return (
+    <Suspense fallback={null}>
+      <PropertyPageInner />
+    </Suspense>
+  );
+}
+
+function PropertyPageInner() {
   const params = useParams();
   const searchParams = useSearchParams();
   const id = params.id as string;

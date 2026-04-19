@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+export const dynamic = "force-dynamic";
+
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -78,6 +80,14 @@ const PROVIDER_INFO: Record<
 };
 
 export default function AIIntegrationSettingsPage() {
+  return (
+    <Suspense fallback={null}>
+      <AIIntegrationSettingsInner />
+    </Suspense>
+  );
+}
+
+function AIIntegrationSettingsInner() {
   const searchParams = useSearchParams();
   const connectedParam = searchParams.get("connected");
   const errorParam = searchParams.get("error");

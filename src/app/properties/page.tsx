@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+export const dynamic = "force-dynamic";
+
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -42,6 +44,14 @@ interface PropertyListItem {
 }
 
 export default function PropertiesPage() {
+  return (
+    <Suspense fallback={null}>
+      <PropertiesPageInner />
+    </Suspense>
+  );
+}
+
+function PropertiesPageInner() {
   const searchParams = useSearchParams();
   const error = searchParams.get("error");
   const [properties, setProperties] = useState<PropertyListItem[]>([]);

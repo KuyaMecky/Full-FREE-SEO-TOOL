@@ -25,13 +25,11 @@ export function InfoTooltip({ content, className, children, side = "top" }: Prop
     <span className={cn("inline-flex items-center gap-1", className)}>
       {children}
       <Tooltip>
-        <TooltipTrigger asChild>
-          <span
-            className="inline-flex items-center justify-center rounded-full text-muted-foreground/60 hover:text-muted-foreground transition-colors cursor-help"
-            aria-label="More info"
-          >
-            <Info className="h-3.5 w-3.5" />
-          </span>
+        <TooltipTrigger
+          className="inline-flex items-center justify-center rounded-full text-muted-foreground/60 hover:text-muted-foreground transition-colors cursor-help"
+          aria-label="More info"
+        >
+          <Info className="h-3.5 w-3.5" />
         </TooltipTrigger>
         <TooltipContent side={side} className="max-w-xs text-xs">
           {content}

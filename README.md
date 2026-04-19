@@ -118,6 +118,65 @@ npm run lint
 3. Authenticate with OpenRouter (PKCE) or provide an API key.
 4. Optionally set a model override.
 
+## Deploy to Vercel (with Turso)
+
+Vercel's filesystem is read-only — local SQLite won't persist there. Use [Turso](https://turso.tech) (SQLite-as-a-service, generous free tier) to keep the existing schema.
+
+### 1. Create a Turso database
+
+```bash
+# Install the Turso CLI (macOS/Linux)
+curl -sSfL https://get.tur.so/install.sh | bash
+
+# Or see https://docs.turso.tech/cli/installation for Windows/winget
+
+turso auth signup      # or: turso auth login
+turso db create seo-audit
+turso db show seo-audit --url
+turso db tokens create seo-audit
+```
+
+Save the **database URL** (starts with `libsql://…`) and the **auth token**.
+
+### 2. Apply the schema
+
+```bash
+# Bundles all Prisma migrations into prisma/turso-schema.sql
+npm run turso:schema
+
+# Pipe it into your Turso DB
+turso db shell seo-audit < prisma/turso-schema.sql
+```
+
+### 3. Deploy on Vercel
+
+1. Push the repo to GitHub (already done if you're here).
+2. On Vercel, **Add New → Project**, import the repo.
+3. In **Environment Variables**, add:
+   - `TURSO_DATABASE_URL` — the `libsql://…` URL from step 1
+   - `TURSO_AUTH_TOKEN` — the token from step 1
+   - `JWT_SECRET` — any long random string
+   - `NEXT_PUBLIC_APP_URL` — your deployment URL, e.g. `https://seo-audit-pro.vercel.app`
+4. Click **Deploy**. Vercel runs `prisma generate && next build`.
+
+### 4. After first deploy
+
+- Visit your deploy URL, register an account.
+- All integrations (Google OAuth, AI provider, PageSpeed API key) are saved to Turso via the in-app Settings screens — no redeploy needed.
+- If you use Google OAuth, add your Vercel URL's callback (`https://your-app.vercel.app/api/google/callback`) to the authorized redirect URIs in Google Cloud Console.
+
+### Schema updates
+
+When you add a new Prisma migration:
+
+```bash
+npx prisma migrate dev --name your_change   # local
+npm run turso:schema                        # rebuild bundled sql
+# Apply only the new migration to Turso:
+turso db shell seo-audit < prisma/migrations/<new_migration>/migration.sql
+git push                                    # Vercel redeploys automatically
+```
+
 ## Project structure
 
 ```text
