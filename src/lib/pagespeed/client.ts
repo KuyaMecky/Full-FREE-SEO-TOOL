@@ -111,10 +111,25 @@ export async function fetchPsi(
 
   const endpoint = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?${params.toString()}`;
 
-  const res = await fetch(endpoint, {
-    // PSI can take 20-40s for a complex page
-    signal: AbortSignal.timeout(60_000),
-  });
+  let res: Response;
+  try {
+    res = await fetch(endpoint, {
+      // PSI can take 60-90s for a slow or complex page
+      signal: AbortSignal.timeout(120_000),
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (
+      msg.includes("timeout") ||
+      msg.includes("aborted") ||
+      (err instanceof DOMException && err.name === "TimeoutError")
+    ) {
+      throw new Error(
+        `PSI timed out after 120s analyzing ${url}. The page may be too slow or unreachable from Google's servers. Try again, or check that the URL is public.`
+      );
+    }
+    throw err;
+  }
 
   if (!res.ok) {
     const body = await res.text();
