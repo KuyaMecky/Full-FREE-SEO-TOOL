@@ -23,6 +23,9 @@ import {
   Layers,
   X,
 } from "lucide-react";
+import { PageHeader } from "@/components/page-header";
+import { HelpBanner } from "@/components/help-banner";
+import { GUIDES } from "@/lib/guides";
 
 interface KeywordOpportunity {
   keyword: string;
@@ -111,16 +114,13 @@ export default function KeywordsPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold flex items-center gap-2">
-          <KeyRound className="h-7 w-7 text-primary" />
-          Keyword research
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          Expand seed keywords into a keyword plan. Cross-referenced with
-          Search Console data if the domain matches a connected property.
-        </p>
-      </div>
+      <PageHeader
+        icon={KeyRound}
+        title="Keyword research"
+        accent="primary"
+        description="Expand seed keywords into a keyword plan. Cross-referenced with Search Console data if the domain matches a connected property."
+      />
+      <HelpBanner guideKey="keywords" guide={GUIDES.keywords} />
 
       <Card className="mb-6">
         <CardHeader>

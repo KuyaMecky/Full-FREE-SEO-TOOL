@@ -20,6 +20,9 @@ import {
   Target,
   FileCode,
   Gauge,
+  FileSearch,
+  Link2,
+  PenLine,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -59,8 +62,12 @@ const NAV_SECTIONS: Array<{ label?: string; items: NavItem[] }> = [
       { href: "/performance", label: "Performance", icon: Gauge },
       { href: "/keywords", label: "Keywords", icon: KeyRound },
       { href: "/competitors", label: "Competitors", icon: Users },
+      { href: "/content", label: "Content", icon: PenLine },
       { href: "/onpage", label: "On-page", icon: Zap },
-      { href: "/schema", label: "Schema", icon: FileCode },
+      { href: "/indexing", label: "Indexing", icon: Search },
+      { href: "/schema-check", label: "Schema Check", icon: FileSearch },
+      { href: "/schema", label: "Schema Gen", icon: FileCode },
+      { href: "/backlinks", label: "Backlinks", icon: Link2 },
     ],
   },
   {
@@ -311,6 +318,10 @@ function getPageTitle(pathname: string): string {
   if (pathname === "/quick-wins") return "Quick Wins";
   if (pathname === "/onpage") return "On-page Analyzer";
   if (pathname === "/schema") return "Schema Generator";
+  if (pathname === "/schema-check") return "Schema Checker";
+  if (pathname === "/indexing") return "URL Inspection";
+  if (pathname === "/backlinks") return "Backlinks";
+  if (pathname === "/content") return "Content Planner";
   if (pathname === "/audit/new") return "New Audit";
   if (pathname.startsWith("/audit/")) return "Audit · Detail";
   if (pathname === "/history") return "History";
@@ -319,6 +330,8 @@ function getPageTitle(pathname: string): string {
     return "Settings · Google Search Console";
   if (pathname.startsWith("/settings/integrations/ai"))
     return "Settings · AI Provider";
+  if (pathname.startsWith("/settings/integrations/pagespeed"))
+    return "Settings · PageSpeed Insights";
   if (pathname.startsWith("/settings/")) return "Settings";
   return "";
 }

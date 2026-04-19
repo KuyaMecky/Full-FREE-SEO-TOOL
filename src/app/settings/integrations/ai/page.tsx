@@ -26,6 +26,9 @@ import {
   ExternalLink,
   LogIn,
 } from "lucide-react";
+import { PageHeader } from "@/components/page-header";
+import { HelpBanner } from "@/components/help-banner";
+import { GUIDES } from "@/lib/guides";
 
 type AIProvider = "anthropic" | "openai" | "gemini" | "openrouter";
 
@@ -195,14 +198,13 @@ export default function AIIntegrationSettingsPage() {
         <ChevronLeft className="h-4 w-4" />
         Settings
       </Link>
-      <h1 className="text-3xl font-bold mb-2 flex items-center gap-2">
-        <Sparkles className="h-7 w-7 text-purple-600" />
-        AI Provider
-      </h1>
-      <p className="text-muted-foreground mb-6">
-        Choose which LLM powers audit reports and GSC suggestions. You can save
-        keys for multiple providers and switch between them.
-      </p>
+      <PageHeader
+        icon={Sparkles}
+        title="AI Provider"
+        accent="purple"
+        description="Choose which LLM powers audit reports, keyword research, competitor analysis, and suggestions. Save keys for multiple providers and switch between them."
+      />
+      <HelpBanner guideKey="settingsAi" guide={GUIDES.settingsAi} />
 
       {message && (
         <Alert

@@ -8,17 +8,21 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { LineChart, ArrowRight, Sparkles } from "lucide-react";
+import { LineChart, ArrowRight, Sparkles, Gauge, Settings as SettingsIcon } from "lucide-react";
+import { PageHeader } from "@/components/page-header";
+import { HelpBanner } from "@/components/help-banner";
+import { GUIDES } from "@/lib/guides";
 
 export default function SettingsPage() {
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground">Settings</h1>
-        <p className="text-muted-foreground mt-2">
-          Configure integrations and API keys.
-        </p>
-      </div>
+      <PageHeader
+        icon={SettingsIcon}
+        title="Settings"
+        accent="primary"
+        description="Configure integrations and API keys. Changes save to the local database — no restart needed."
+      />
+      <HelpBanner guideKey="settings" guide={GUIDES.settings} />
 
       <Card>
         <CardHeader>
@@ -52,6 +56,21 @@ export default function SettingsPage() {
                 <div className="text-sm text-muted-foreground mt-1">
                   Choose Anthropic Claude, OpenAI, or Google Gemini for
                   audit reports and GSC suggestions.
+                </div>
+              </div>
+              <ArrowRight className="h-4 w-4 text-muted-foreground/70" />
+            </div>
+          </Link>
+          <Link href="/settings/integrations/pagespeed">
+            <div className="flex items-center justify-between p-4 border rounded-md hover:bg-muted/40 cursor-pointer">
+              <div>
+                <div className="font-medium flex items-center gap-2">
+                  <Gauge className="h-4 w-4 text-amber-500" />
+                  PageSpeed Insights
+                </div>
+                <div className="text-sm text-muted-foreground mt-1">
+                  Add a free API key for 25,000 Core Web Vitals queries/day.
+                  Without it, you share a tight anonymous rate limit.
                 </div>
               </div>
               <ArrowRight className="h-4 w-4 text-muted-foreground/70" />

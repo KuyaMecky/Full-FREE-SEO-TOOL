@@ -14,6 +14,9 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Plus, X, Sparkles, AlertCircle, Users } from "lucide-react";
+import { PageHeader } from "@/components/page-header";
+import { HelpBanner } from "@/components/help-banner";
+import { GUIDES } from "@/lib/guides";
 
 interface Insight {
   competitor: string;
@@ -100,15 +103,13 @@ export default function CompetitorsPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold flex items-center gap-2">
-          <Users className="h-7 w-7 text-primary" />
-          Competitor research
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          Crawl competitor homepages and get a gap analysis against your site.
-        </p>
-      </div>
+      <PageHeader
+        icon={Users}
+        title="Competitor research"
+        accent="purple"
+        description="Crawl competitor homepages and get a gap analysis against your site."
+      />
+      <HelpBanner guideKey="competitors" guide={GUIDES.competitors} />
 
       <Card className="mb-6">
         <CardHeader>

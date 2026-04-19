@@ -12,7 +12,10 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, Trash2, ArrowRight } from "lucide-react";
+import { Search, Trash2, ArrowRight, History as HistoryIcon } from "lucide-react";
+import { PageHeader } from "@/components/page-header";
+import { HelpBanner } from "@/components/help-banner";
+import { GUIDES } from "@/lib/guides";
 
 interface Audit {
   id: string;
@@ -88,20 +91,21 @@ export default function HistoryPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Audit History</h1>
-          <p className="text-muted-foreground mt-2">
-            View and manage your previous SEO audits
-          </p>
-        </div>
-        <Link href="/audit/new">
-          <Button className="gap-2">
-            <Search className="h-4 w-4" />
-            New Audit
-          </Button>
-        </Link>
-      </div>
+      <PageHeader
+        icon={HistoryIcon}
+        title="Audit History"
+        accent="primary"
+        description="View and manage your previous SEO audits."
+        actions={
+          <Link href="/audit/new">
+            <Button className="gap-2">
+              <Search className="h-4 w-4" />
+              New Audit
+            </Button>
+          </Link>
+        }
+      />
+      <HelpBanner guideKey="history" guide={GUIDES.history} />
 
       {loading ? (
         <div className="space-y-4">

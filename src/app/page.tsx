@@ -36,6 +36,9 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { PortfolioTrendChart } from "@/components/properties/portfolio-trend-chart";
+import { PageHeader } from "@/components/page-header";
+import { HelpBanner } from "@/components/help-banner";
+import { GUIDES } from "@/lib/guides";
 
 interface UserData {
   id: string;
@@ -135,30 +138,29 @@ export default function HomePage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-8 flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-3xl font-bold">
-            Welcome back{user.name ? `, ${user.name}` : ""}
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Overview across all connected Search Console properties.
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Link href="/properties/connect">
-            <Button variant="outline" className="gap-2">
-              <Plus className="h-4 w-4" />
-              Add property
-            </Button>
-          </Link>
-          <Link href="/audit/new">
-            <Button className="gap-2">
-              <Search className="h-4 w-4" />
-              New audit
-            </Button>
-          </Link>
-        </div>
-      </div>
+      <PageHeader
+        icon={BarChart3}
+        title={`Welcome back${user.name ? `, ${user.name}` : ""}`}
+        accent="primary"
+        description="Overview across all connected Search Console properties."
+        actions={
+          <>
+            <Link href="/properties/connect">
+              <Button variant="outline" className="gap-2">
+                <Plus className="h-4 w-4" />
+                Add property
+              </Button>
+            </Link>
+            <Link href="/audit/new">
+              <Button className="gap-2">
+                <Search className="h-4 w-4" />
+                New audit
+              </Button>
+            </Link>
+          </>
+        }
+      />
+      <HelpBanner guideKey="dashboard" guide={GUIDES.dashboard} />
 
       {properties.length === 0 ? (
         <EmptyState />
@@ -487,64 +489,162 @@ function EmptyState() {
 
 function MarketingHome() {
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold mb-4">Professional SEO Audit Tool</h1>
-        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-          Crawl any website, analyze SEO health with AI-powered insights, and
-          track real search performance from Google Search Console.
-        </p>
-        <div className="mt-8 flex gap-3 justify-center">
+    <div>
+      {/* Hero */}
+      <section className="relative overflow-hidden border-b border-border">
+        <div
+          className="absolute inset-0 bg-gradient-to-br from-primary/15 via-purple-500/10 to-transparent pointer-events-none"
+          aria-hidden
+        />
+        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24">
+          <div className="max-w-3xl">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-border bg-card/50 backdrop-blur text-xs font-medium mb-6">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+              </span>
+              Built on free Google APIs
+            </div>
+            <h1 className="text-5xl md:text-6xl font-bold tracking-tight leading-[1.05] mb-5">
+              The complete SEO toolkit.
+              <br />
+              <span className="bg-gradient-to-r from-primary via-purple-500 to-blue-500 bg-clip-text text-transparent">
+                Powered by your data.
+              </span>
+            </h1>
+            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl leading-relaxed">
+              Crawl, audit, track rankings, analyze competitors, and generate
+              AI-powered suggestions — all in one tool that runs on Google
+              Search Console, PageSpeed Insights, and the LLM of your choice.
+            </p>
+            <div className="mt-8 flex gap-3 flex-wrap">
+              <Link href="/register">
+                <Button size="lg" className="gap-2 h-11 px-6">
+                  Get Started
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </Link>
+              <Link href="/login">
+                <Button size="lg" variant="outline" className="h-11 px-6">
+                  Sign in
+                </Button>
+              </Link>
+            </div>
+            <div className="mt-10 text-sm text-muted-foreground flex items-center gap-6 flex-wrap">
+              <span className="inline-flex items-center gap-1.5">
+                <FileText className="h-4 w-4" />
+                PDF reports
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <LineChart className="h-4 w-4" />
+                Real GSC data
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <BarChart3 className="h-4 w-4" />
+                Claude · OpenAI · Gemini
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Features */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="max-w-2xl mb-12">
+          <h2 className="text-3xl font-bold tracking-tight mb-3">
+            Everything you need in one place
+          </h2>
+          <p className="text-muted-foreground">
+            Replace a stack of SEO tools with a single app you can self-host.
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-5">
+          {[
+            {
+              icon: LineChart,
+              color: "text-blue-500",
+              bg: "bg-blue-500/10",
+              title: "Search performance",
+              body: "Impressions, clicks, CTR, and average position from Google Search Console with trend charts and sortable per-query / per-page tables.",
+            },
+            {
+              icon: Zap,
+              color: "text-amber-500",
+              bg: "bg-amber-500/10",
+              title: "Technical audits",
+              body: "Rate-limited crawler with 9 specialized analyzers for meta, headings, links, images, schema, security, robots, sitemaps, and performance.",
+            },
+            {
+              icon: BarChart3,
+              color: "text-emerald-500",
+              bg: "bg-emerald-500/10",
+              title: "AI suggestions",
+              body: "Title rewrites, content angles, internal-link ideas, keyword plans, and competitor gap analyses powered by your chosen LLM.",
+            },
+            {
+              icon: Search,
+              color: "text-purple-500",
+              bg: "bg-purple-500/10",
+              title: "URL Inspection",
+              body: "Live indexing status, Google canonical, mobile usability, rich-results validation — all via the official GSC URL Inspection API.",
+            },
+            {
+              icon: ArrowRight,
+              color: "text-rose-500",
+              bg: "bg-rose-500/10",
+              title: "Core Web Vitals",
+              body: "LCP, CLS, INP, FCP, TTFB, and the full Lighthouse report from PageSpeed Insights. Desktop and mobile, per URL.",
+            },
+            {
+              icon: FileText,
+              color: "text-primary",
+              bg: "bg-primary/10",
+              title: "Quick wins",
+              body: "Portfolio-wide table of queries ranking positions 4-20 with real impressions. Your fastest path to page 1.",
+            },
+          ].map((f) => {
+            const Icon = f.icon;
+            return (
+              <Card
+                key={f.title}
+                className="hover:shadow-md transition-shadow"
+              >
+                <CardHeader>
+                  <div
+                    className={`h-10 w-10 rounded-lg ${f.bg} ${f.color} flex items-center justify-center mb-3`}
+                  >
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <CardTitle className="text-lg">{f.title}</CardTitle>
+                  <CardDescription className="leading-relaxed">
+                    {f.body}
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="border-t border-border bg-muted/30">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
+          <h2 className="text-3xl font-bold tracking-tight mb-3">
+            Start your first audit in minutes
+          </h2>
+          <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
+            Create an account, connect Google Search Console, and run your
+            first full-site audit. No credit card required.
+          </p>
           <Link href="/register">
-            <Button size="lg" className="gap-2">
-              Get Started
-            </Button>
-          </Link>
-          <Link href="/login">
-            <Button size="lg" variant="outline">
-              Sign in
+            <Button size="lg" className="gap-2 h-11 px-6">
+              Get Started Free
+              <ArrowRight className="h-4 w-4" />
             </Button>
           </Link>
         </div>
-      </div>
-
-      <div className="grid md:grid-cols-3 gap-6 mt-12">
-        <Card>
-          <CardHeader>
-            <LineChart className="h-10 w-10 text-blue-600 mb-2" />
-            <CardTitle>Search performance</CardTitle>
-            <CardDescription>
-              Connect Google Search Console to see impressions, clicks, keyword
-              rankings, and per-page metrics.
-            </CardDescription>
-          </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader>
-            <Zap className="h-10 w-10 text-purple-600 mb-2" />
-            <CardTitle>Technical audits</CardTitle>
-            <CardDescription>
-              Rate-limited crawler with specialized analyzers for meta,
-              headings, links, images, structured data, security, and more.
-            </CardDescription>
-          </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader>
-            <BarChart3 className="h-10 w-10 text-green-600 mb-2" />
-            <CardTitle>AI suggestions</CardTitle>
-            <CardDescription>
-              Claude, Gemini, or OpenAI-powered title rewrites, content angles,
-              and internal link ideas.
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      </div>
-
-      <div className="mt-8 text-center text-sm text-muted-foreground">
-        <FileText className="inline h-4 w-4 mr-1" />
-        Export professional PDF reports for every audit
-      </div>
+      </section>
     </div>
   );
 }

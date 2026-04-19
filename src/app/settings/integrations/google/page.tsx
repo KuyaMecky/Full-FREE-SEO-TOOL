@@ -22,7 +22,11 @@ import {
   AlertCircle,
   ChevronLeft,
   Trash2,
+  LineChart,
 } from "lucide-react";
+import { PageHeader } from "@/components/page-header";
+import { HelpBanner } from "@/components/help-banner";
+import { GUIDES } from "@/lib/guides";
 
 interface Status {
   configured: boolean;
@@ -133,12 +137,13 @@ export default function GoogleIntegrationSettingsPage() {
         <ChevronLeft className="h-4 w-4" />
         Settings
       </Link>
-      <h1 className="text-3xl font-bold mb-2">Google Search Console</h1>
-      <p className="text-muted-foreground mb-6">
-        Connect the app to the Google Search Console API so you (and anyone using
-        this install) can pull impressions, clicks, keyword rankings, and page
-        metrics.
-      </p>
+      <PageHeader
+        icon={LineChart}
+        title="Google Search Console"
+        accent="blue"
+        description="Connect the app to the Google Search Console API to pull impressions, clicks, keyword rankings, and page metrics."
+      />
+      <HelpBanner guideKey="settingsGoogle" guide={GUIDES.settingsGoogle} />
 
       {message && (
         <Alert

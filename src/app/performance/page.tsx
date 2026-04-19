@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
   Card,
   CardContent,
@@ -20,9 +21,12 @@ import {
   AlertCircle,
   RefreshCw,
   AlertTriangle,
-  Badge as BadgeIcon,
+  KeyRound,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { PageHeader } from "@/components/page-header";
+import { HelpBanner } from "@/components/help-banner";
+import { GUIDES } from "@/lib/guides";
 
 interface PsiResult {
   url: string;
@@ -80,6 +84,7 @@ export default function PerformancePage() {
   const [result, setResult] = useState<PsiResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [rateLimited, setRateLimited] = useState(false);
 
   const run = async () => {
     const trimmed = url.trim();
@@ -89,6 +94,7 @@ export default function PerformancePage() {
     }
     setLoading(true);
     setError("");
+    setRateLimited(false);
     try {
       const res = await fetch("/api/tools/performance", {
         method: "POST",
@@ -97,7 +103,10 @@ export default function PerformancePage() {
       });
       const data = await res.json();
       if (res.ok) setResult(data.result);
-      else setError(data.error || "Failed");
+      else {
+        setError(data.error || "Failed");
+        if (res.status === 429) setRateLimited(true);
+      }
     } catch {
       setError("Failed to fetch PSI");
     } finally {
@@ -111,16 +120,13 @@ export default function PerformancePage() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold flex items-center gap-2">
-          <Zap className="h-7 w-7 text-amber-500" />
-          Performance
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          Run Google PageSpeed Insights against any URL. See Core Web Vitals,
-          Lighthouse category scores, and concrete fixes.
-        </p>
-      </div>
+      <PageHeader
+        icon={Zap}
+        title="Performance"
+        accent="amber"
+        description="Run Google PageSpeed Insights against any URL. See Core Web Vitals, Lighthouse category scores, and concrete fixes."
+      />
+      <HelpBanner guideKey="performance" guide={GUIDES.performance} />
 
       <Card className="mb-6">
         <CardHeader>
@@ -163,15 +169,28 @@ export default function PerformancePage() {
               <RefreshCw
                 className={`h-4 w-4 ${loading ? "animate-spin" : ""}`}
               />
-              {loading ? "Running (30-60s)…" : "Analyze"}
+              {loading ? "Running (30-90s)…" : "Analyze"}
             </Button>
           </div>
-          {error && (
+          {error && rateLimited ? (
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription className="flex items-center justify-between gap-4 flex-wrap">
+                <span>{error}</span>
+                <Link href="/settings/integrations/pagespeed">
+                  <Button size="sm" className="gap-2">
+                    <KeyRound className="h-4 w-4" />
+                    Set up API key
+                  </Button>
+                </Link>
+              </AlertDescription>
+            </Alert>
+          ) : error ? (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>{error}</AlertDescription>
             </Alert>
-          )}
+          ) : null}
         </CardContent>
       </Card>
 

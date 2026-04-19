@@ -14,6 +14,9 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ConnectGoogleButton } from "@/components/properties/connect-google-button";
+import { PageHeader } from "@/components/page-header";
+import { HelpBanner } from "@/components/help-banner";
+import { GUIDES } from "@/lib/guides";
 import {
   Plus,
   AlertCircle,
@@ -84,22 +87,23 @@ export default function PropertiesPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-3xl font-bold">Properties</h1>
-          <p className="text-muted-foreground mt-1">
-            Track impressions, clicks, and keyword rankings from Google Search Console.
-          </p>
-        </div>
-        {hasGoogleAccount && (
-          <Link href="/properties/connect">
-            <Button className="gap-2">
-              <Plus className="h-4 w-4" />
-              Add property
-            </Button>
-          </Link>
-        )}
-      </div>
+      <PageHeader
+        icon={LineChartIcon}
+        title="Properties"
+        accent="blue"
+        description="Track impressions, clicks, and keyword rankings from Google Search Console."
+        actions={
+          hasGoogleAccount ? (
+            <Link href="/properties/connect">
+              <Button className="gap-2">
+                <Plus className="h-4 w-4" />
+                Add property
+              </Button>
+            </Link>
+          ) : null
+        }
+      />
+      <HelpBanner guideKey="properties" guide={GUIDES.properties} />
 
       {error === "google_not_configured" ? (
         <Alert className="mb-6">
