@@ -11,7 +11,7 @@ function createPrisma() {
   // Hosted deploys (Vercel etc.) set TURSO_DATABASE_URL — use libSQL over HTTP.
   // Local dev keeps using better-sqlite3 against dev.db.
   const tursoUrl = process.env.TURSO_DATABASE_URL;
-  if (tursoUrl) {
+  if (tursoUrl && tursoUrl !== "undefined") {
     const libsql = createClient({
       url: tursoUrl,
       authToken: process.env.TURSO_AUTH_TOKEN,
