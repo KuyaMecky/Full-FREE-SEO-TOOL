@@ -3,16 +3,12 @@
 import "dotenv/config";
 import { defineConfig } from "prisma/config";
 
-// The driver adapter in src/lib/db.ts is what actually executes queries
-// (better-sqlite3 locally, libSQL/Turso in hosted deploys). But Prisma's
-// engine still requires a syntactically valid datasource URL at startup,
-// so fall back to a dummy SQLite file URL when DATABASE_URL isn't set.
 export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: {
     path: "prisma/migrations",
   },
   datasource: {
-    url: process.env["DATABASE_URL"] || "file:./dev.db",
+    url: process.env["DATABASE_URL"],
   },
 });
