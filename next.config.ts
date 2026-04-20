@@ -10,10 +10,6 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  // better-sqlite3 is a native module only used in local dev; let Next
-  // bundle it as an external on the server runtime to keep the fallback
-  // path working when TURSO_DATABASE_URL is not set.
-  serverExternalPackages: ["better-sqlite3"],
 };
 
 export default nextConfig;
