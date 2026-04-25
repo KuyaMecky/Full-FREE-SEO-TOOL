@@ -3,15 +3,12 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
-  Search, BarChart3, FileText, Zap, LineChart, ArrowRight,
-  ArrowUp, ArrowDown, Plus, Eye, MousePointerClick, Percent,
-  TrendingUp, Sparkles, Shield, Users, Target, Globe,
-  KeyRound, PenLine, Activity,
+  Search, BarChart3, LineChart, ArrowRight, ArrowUp, ArrowDown,
+  Plus, Eye, MousePointerClick, Percent, TrendingUp, Globe,
+  PenLine, Activity, Target, Zap, KeyRound, Users,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PortfolioTrendChart } from "@/components/properties/portfolio-trend-chart";
 
 interface UserData { id: string; email: string; name: string | null }
@@ -33,11 +30,8 @@ type SortKey = "site" | "impressions" | "clicks" | "ctr" | "position";
 type SortDir = "asc" | "desc";
 
 const STATUS_DOT: Record<string, string> = {
-  pending: "bg-yellow-400",
-  crawling: "bg-blue-400 animate-pulse",
-  analyzing: "bg-violet-400 animate-pulse",
-  complete: "bg-emerald-400",
-  error: "bg-red-400",
+  pending: "bg-amber-400", crawling: "bg-blue-400 animate-pulse",
+  analyzing: "bg-primary animate-pulse", complete: "bg-emerald-500", error: "bg-red-500",
 };
 
 export default function HomePage() {
@@ -63,80 +57,77 @@ export default function HomePage() {
 
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6">
-        <div className="space-y-2"><Skeleton className="h-7 w-64" /><Skeleton className="h-4 w-40" /></div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">{[...Array(4)].map((_, i) => <Skeleton key={i} className="h-28 rounded-2xl" />)}</div>
-        <Skeleton className="h-60 rounded-2xl" />
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 space-y-5">
+        <Skeleton className="h-7 w-56" />
+        <div className="grid grid-cols-4 gap-3">{[...Array(4)].map((_, i) => <Skeleton key={i} className="h-20 rounded-lg" />)}</div>
+        <Skeleton className="h-52 rounded-lg" />
       </div>
     );
   }
 
-  if (!user) return <MarketingHome />;
+  if (!user) return <Landing />;
 
   const hour = new Date().getHours();
-  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+  const g = hour < 12 ? "Morning" : hour < 17 ? "Afternoon" : "Evening";
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-8">
       {/* Header */}
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            {greeting}{user.name ? `, ${user.name.split(" ")[0]}` : ""} 👋
+          <h1 className="font-display font-bold text-2xl">
+            Good {g}{user.name ? `, ${user.name.split(" ")[0]}` : ""}
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-[13px] text-muted-foreground mt-1">
             {properties.length > 0
-              ? `Monitoring ${properties.length} propert${properties.length === 1 ? "y" : "ies"} · last 28 days`
-              : "Connect your first property to start"}
+              ? `${properties.length} propert${properties.length === 1 ? "y" : "ies"} · last 28 days`
+              : "Connect a property to get started"}
           </p>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2">
           <Link href="/properties/connect">
-            <button className="inline-flex items-center gap-1.5 text-[13px] font-medium px-3.5 py-2 rounded-lg border border-border hover:bg-muted transition-colors">
-              <Plus className="h-3.5 w-3.5" />
-              Add property
+            <button className="flex items-center gap-1.5 text-[12px] font-medium px-3 py-1.5 rounded border border-border hover:bg-muted transition-colors">
+              <Plus className="h-3.5 w-3.5" /> Add property
             </button>
           </Link>
           <Link href="/audit/new">
-            <button className="inline-flex items-center gap-1.5 text-[13px] font-semibold px-3.5 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm shadow-primary/20">
-              <Search className="h-3.5 w-3.5" />
-              New audit
+            <button className="flex items-center gap-1.5 text-[12px] font-semibold px-3 py-1.5 rounded bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
+              <Search className="h-3.5 w-3.5" /> New audit
             </button>
           </Link>
         </div>
       </div>
 
-      {properties.length === 0 ? <EmptyState /> : (
+      {properties.length === 0 ? <EmptyDash /> : (
         <>
-          <KpiGrid properties={properties} />
+          {/* KPIs */}
+          <KpiRow properties={properties} />
           <PortfolioTrendChart properties={properties} />
-          <PropertiesTable
-            properties={properties}
-            sortKey={sortKey}
-            sortDir={sortDir}
-            onSort={(k) => {
+          <SitesTable properties={properties} sortKey={sortKey} sortDir={sortDir}
+            onSort={k => {
               if (sortKey === k) setSortDir(d => d === "asc" ? "desc" : "asc");
               else { setSortKey(k); setSortDir(k === "position" || k === "site" ? "asc" : "desc"); }
-            }}
-          />
+            }} />
         </>
       )}
 
       {/* Quick actions */}
       <section>
-        <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground mb-3">Quick Actions</p>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground mb-3">Quick access</p>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {[
-            { href: "/quick-wins", icon: Target, label: "Quick Wins", sub: "Page 4–20 gaps", from: "from-emerald-500/15", to: "to-emerald-500/5", icon_cls: "text-emerald-600 dark:text-emerald-400" },
-            { href: "/content", icon: PenLine, label: "Content AI", sub: "Generate articles", from: "from-violet-500/15", to: "to-violet-500/5", icon_cls: "text-violet-600 dark:text-violet-400" },
-            { href: "/indexing", icon: Search, label: "URL Inspect", sub: "Check indexing", from: "from-blue-500/15", to: "to-blue-500/5", icon_cls: "text-blue-600 dark:text-blue-400" },
-            { href: "/performance", icon: Activity, label: "Core Web Vitals", sub: "LCP · CLS · INP", from: "from-amber-500/15", to: "to-amber-500/5", icon_cls: "text-amber-600 dark:text-amber-400" },
-          ].map((a) => (
+            { href: "/quick-wins", icon: Target, label: "Quick Wins",     sub: "Pos. 4–20 gaps" },
+            { href: "/content",    icon: PenLine, label: "Content AI",    sub: "Generate articles" },
+            { href: "/indexing",   icon: Search,  label: "URL Inspect",   sub: "Indexing status" },
+            { href: "/performance",icon: Activity, label: "Core Web Vitals",sub: "LCP · CLS · INP" },
+          ].map(a => (
             <Link key={a.href} href={a.href}>
-              <div className={`group relative rounded-2xl border border-border bg-gradient-to-br ${a.from} ${a.to} hover:border-primary/30 hover:shadow-md transition-all duration-200 p-5 cursor-pointer overflow-hidden`}>
-                <a.icon className={`h-5 w-5 ${a.icon_cls} mb-3 group-hover:scale-110 transition-transform duration-200`} />
-                <p className="font-semibold text-[13px]">{a.label}</p>
-                <p className="text-[11px] text-muted-foreground mt-0.5">{a.sub}</p>
+              <div className="flex items-start gap-3 p-3.5 rounded-lg border border-border hover:border-primary/40 hover:bg-primary/[0.03] transition-all group cursor-pointer">
+                <a.icon className="h-4 w-4 text-muted-foreground group-hover:text-primary mt-0.5 transition-colors shrink-0" />
+                <div>
+                  <p className="text-[13px] font-semibold leading-none">{a.label}</p>
+                  <p className="text-[11px] text-muted-foreground mt-1">{a.sub}</p>
+                </div>
               </div>
             </Link>
           ))}
@@ -147,26 +138,22 @@ export default function HomePage() {
       {audits.length > 0 && (
         <section>
           <div className="flex items-center justify-between mb-3">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Recent Audits</p>
-            <Link href="/history" className="text-[12px] font-medium text-primary hover:underline flex items-center gap-1">
-              View all <ArrowRight className="h-3 w-3" />
-            </Link>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">Recent audits</p>
+            <Link href="/history" className="text-[12px] text-primary hover:underline">View all</Link>
           </div>
-          <div className="rounded-2xl border border-border overflow-hidden divide-y divide-border/60 bg-card">
-            {audits.slice(0, 5).map((a) => (
+          <div className="rounded-lg border border-border overflow-hidden divide-y divide-border bg-card">
+            {audits.slice(0, 5).map(a => (
               <Link key={a.id} href={`/audit/${a.id}`}>
-                <div className="flex items-center justify-between px-5 py-3.5 hover:bg-muted/40 transition-colors group">
+                <div className="flex items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors group">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className={`h-2 w-2 rounded-full shrink-0 ${STATUS_DOT[a.status] ?? "bg-muted-foreground"}`} />
-                    <div className="min-w-0">
-                      <p className="text-[13px] font-medium truncate">{a.domain}</p>
-                      <p className="text-[11px] text-muted-foreground">
-                        {new Date(a.createdAt).toLocaleDateString()}
-                        {a.overallScore != null && ` · Score ${Math.round(a.overallScore)}/100`}
-                      </p>
-                    </div>
+                    <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${STATUS_DOT[a.status] ?? "bg-muted-foreground"}`} />
+                    <p className="text-[13px] font-medium truncate">{a.domain}</p>
+                    <p className="text-[11px] text-muted-foreground hidden sm:block">
+                      {new Date(a.createdAt).toLocaleDateString()}
+                      {a.overallScore != null && ` · ${Math.round(a.overallScore)}/100`}
+                    </p>
                   </div>
-                  <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/40 group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0" />
+                  <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/30 group-hover:text-primary transition-colors shrink-0" />
                 </div>
               </Link>
             ))}
@@ -177,50 +164,36 @@ export default function HomePage() {
   );
 }
 
-function KpiGrid({ properties }: { properties: PropertyItem[] }) {
-  const ws = properties.filter((p) => p.latestSnapshot);
-  const totalImpr = ws.reduce((s, p) => s + (p.latestSnapshot?.totalImpressions ?? 0), 0);
-  const totalClicks = ws.reduce((s, p) => s + (p.latestSnapshot?.totalClicks ?? 0), 0);
-  const avgCtr = totalImpr > 0 ? totalClicks / totalImpr : 0;
-  const avgPos = totalImpr > 0
-    ? ws.reduce((s, p) => s + (p.latestSnapshot?.avgPosition ?? 0) * (p.latestSnapshot?.totalImpressions ?? 0), 0) / totalImpr
-    : 0;
-
-  const fmt = (n: number) => n >= 1_000_000 ? `${(n / 1_000_000).toFixed(1)}M` : n >= 1000 ? `${(n / 1000).toFixed(1)}k` : n.toLocaleString();
-
-  const items = [
-    { label: "Impressions", value: fmt(totalImpr), icon: Eye, grad: "from-blue-500 to-indigo-500", bg: "bg-blue-500/8 dark:bg-blue-500/10" },
-    { label: "Clicks", value: fmt(totalClicks), icon: MousePointerClick, grad: "from-emerald-500 to-teal-500", bg: "bg-emerald-500/8 dark:bg-emerald-500/10" },
-    { label: "Avg. CTR", value: `${(avgCtr * 100).toFixed(2)}%`, icon: Percent, grad: "from-violet-500 to-purple-500", bg: "bg-violet-500/8 dark:bg-violet-500/10" },
-    { label: "Avg. Position", value: avgPos.toFixed(1), icon: TrendingUp, grad: "from-amber-500 to-orange-500", bg: "bg-amber-500/8 dark:bg-amber-500/10" },
-  ];
+function KpiRow({ properties }: { properties: PropertyItem[] }) {
+  const ws = properties.filter(p => p.latestSnapshot);
+  const ti = ws.reduce((s, p) => s + (p.latestSnapshot?.totalImpressions ?? 0), 0);
+  const tc = ws.reduce((s, p) => s + (p.latestSnapshot?.totalClicks ?? 0), 0);
+  const ctr = ti > 0 ? tc / ti : 0;
+  const pos = ti > 0 ? ws.reduce((s, p) => s + (p.latestSnapshot?.avgPosition ?? 0) * (p.latestSnapshot?.totalImpressions ?? 0), 0) / ti : 0;
+  const fmt = (n: number) => n >= 1_000_000 ? `${(n/1e6).toFixed(1)}M` : n >= 1000 ? `${(n/1000).toFixed(1)}k` : n.toLocaleString();
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-      {items.map((item) => {
-        const Icon = item.icon;
-        return (
-          <div key={item.label} className={`relative rounded-2xl border border-border ${item.bg} p-5 overflow-hidden group hover:shadow-md hover:border-border/80 transition-all duration-200`}>
-            <div className="flex items-center justify-between mb-4">
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.06em]">{item.label}</p>
-              <div className={`h-8 w-8 rounded-xl bg-gradient-to-br ${item.grad} flex items-center justify-center shadow-sm`}>
-                <Icon className="h-4 w-4 text-white" />
-              </div>
-            </div>
-            <p className="text-3xl font-bold tabular-nums tracking-tight">{item.value}</p>
-            <p className="text-[11px] text-muted-foreground mt-1.5">Last 28 days</p>
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      {[
+        { label: "Impressions", value: fmt(ti),           icon: Eye,              accent: "text-blue-600 dark:text-blue-400" },
+        { label: "Clicks",      value: fmt(tc),           icon: MousePointerClick, accent: "text-primary" },
+        { label: "Avg. CTR",    value: `${(ctr*100).toFixed(2)}%`, icon: Percent, accent: "text-violet-600 dark:text-violet-400" },
+        { label: "Avg. Pos.",   value: pos.toFixed(1),    icon: TrendingUp,       accent: "text-amber-600 dark:text-amber-400" },
+      ].map(({ label, value, icon: Icon, accent }) => (
+        <div key={label} className="bg-card border border-border rounded-lg p-4">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-[11px] font-medium text-muted-foreground">{label}</p>
+            <Icon className={`h-3.5 w-3.5 ${accent}`} />
           </div>
-        );
-      })}
+          <p className="stat-num text-2xl font-bold">{value}</p>
+        </div>
+      ))}
     </div>
   );
 }
 
-function PropertiesTable({ properties, sortKey, sortDir, onSort }: {
-  properties: PropertyItem[];
-  sortKey: SortKey;
-  sortDir: SortDir;
-  onSort: (k: SortKey) => void;
+function SitesTable({ properties, sortKey, sortDir, onSort }: {
+  properties: PropertyItem[]; sortKey: SortKey; sortDir: SortDir; onSort: (k: SortKey) => void;
 }) {
   const sorted = useMemo(() => {
     const c = [...properties];
@@ -238,8 +211,8 @@ function PropertiesTable({ properties, sortKey, sortDir, onSort }: {
   const SH = ({ label, k, right }: { label: string; k: SortKey; right?: boolean }) => {
     const active = sortKey === k;
     return (
-      <TableHead className={`cursor-pointer select-none text-[11px] font-semibold uppercase tracking-[0.06em] ${right ? "text-right" : ""}`} onClick={() => onSort(k)}>
-        <span className={`inline-flex items-center gap-1 transition-colors ${active ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+      <TableHead className={`cursor-pointer select-none ${right ? "text-right" : ""}`} onClick={() => onSort(k)}>
+        <span className={`inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.06em] transition-colors ${active ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
           {label}
           {active && (sortDir === "asc" ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />)}
         </span>
@@ -248,18 +221,15 @@ function PropertiesTable({ properties, sortKey, sortDir, onSort }: {
   };
 
   return (
-    <div className="rounded-2xl border border-border overflow-hidden bg-card">
-      <div className="px-5 py-4 border-b border-border/60 flex items-center justify-between">
-        <div>
-          <p className="font-semibold text-[14px]">Connected Properties</p>
-          <p className="text-[11px] text-muted-foreground mt-0.5">Click any row to open its full dashboard</p>
-        </div>
-        <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-muted text-muted-foreground">{properties.length} sites</span>
+    <div className="rounded-lg border border-border overflow-hidden bg-card">
+      <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+        <p className="font-semibold text-[13px]">Sites</p>
+        <span className="text-[11px] text-muted-foreground">{properties.length} connected</span>
       </div>
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
-            <TableRow className="hover:bg-transparent border-border/40">
+            <TableRow className="hover:bg-transparent border-border">
               <SH label="Site" k="site" />
               <SH label="Impressions" k="impressions" right />
               <SH label="Clicks" k="clicks" right />
@@ -270,27 +240,22 @@ function PropertiesTable({ properties, sortKey, sortDir, onSort }: {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sorted.map((p) => {
+            {sorted.map(p => {
               const s = p.latestSnapshot;
               const domain = p.siteUrl.replace(/^https?:\/\//, "").replace(/^sc-domain:/, "").replace(/\/$/, "");
+              const pos = s?.avgPosition ?? 0;
+              const pc = pos <= 3 ? "text-emerald-600 dark:text-emerald-400 font-bold" : pos <= 10 ? "text-emerald-600 dark:text-emerald-400" : pos <= 20 ? "text-amber-600 dark:text-amber-400" : "";
               return (
-                <TableRow key={p.id} className="cursor-pointer hover:bg-muted/30 border-border/40 group transition-colors" onClick={() => { window.location.href = `/properties/${p.id}`; }}>
-                  <TableCell className="font-medium py-3.5">
-                    <div className="flex items-center gap-2.5">
-                      <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                        <Globe className="h-3.5 w-3.5 text-primary" />
-                      </div>
-                      <span className="text-[13px] truncate max-w-[200px]">{domain}</span>
-                    </div>
+                <TableRow key={p.id} className="cursor-pointer hover:bg-muted/25 border-border group" onClick={() => { window.location.href = `/properties/${p.id}`; }}>
+                  <TableCell className="font-medium py-3">
+                    <span className="text-[13px] truncate block max-w-[220px]">{domain}</span>
                   </TableCell>
-                  <TableCell className="text-right tabular-nums text-[13px]">{s ? s.totalImpressions.toLocaleString() : <span className="text-muted-foreground/40">—</span>}</TableCell>
-                  <TableCell className="text-right tabular-nums text-[13px]">{s ? s.totalClicks.toLocaleString() : <span className="text-muted-foreground/40">—</span>}</TableCell>
-                  <TableCell className="text-right tabular-nums text-[13px]">{s ? `${(s.avgCtr * 100).toFixed(2)}%` : <span className="text-muted-foreground/40">—</span>}</TableCell>
-                  <TableCell className="text-right tabular-nums text-[13px]">{s ? <PosBadge pos={s.avgPosition} /> : <span className="text-muted-foreground/40">—</span>}</TableCell>
-                  <TableCell className="text-right text-[12px] text-muted-foreground">{s ? new Date(s.fetchedAt).toLocaleDateString() : "—"}</TableCell>
-                  <TableCell className="text-right pr-4">
-                    <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/30 group-hover:text-primary group-hover:translate-x-0.5 transition-all inline" />
-                  </TableCell>
+                  <TableCell className="text-right stat-num text-[13px]">{s ? s.totalImpressions.toLocaleString() : <span className="text-muted-foreground/40">—</span>}</TableCell>
+                  <TableCell className="text-right stat-num text-[13px]">{s ? s.totalClicks.toLocaleString() : <span className="text-muted-foreground/40">—</span>}</TableCell>
+                  <TableCell className="text-right stat-num text-[13px]">{s ? `${(s.avgCtr*100).toFixed(2)}%` : <span className="text-muted-foreground/40">—</span>}</TableCell>
+                  <TableCell className={`text-right stat-num text-[13px] ${pc}`}>{s ? s.avgPosition.toFixed(1) : <span className="text-muted-foreground/40">—</span>}</TableCell>
+                  <TableCell className="text-right text-[11px] text-muted-foreground">{s ? new Date(s.fetchedAt).toLocaleDateString() : "—"}</TableCell>
+                  <TableCell className="pr-3"><ArrowRight className="h-3.5 w-3.5 text-muted-foreground/25 group-hover:text-primary transition-colors ml-auto" /></TableCell>
                 </TableRow>
               );
             })}
@@ -301,30 +266,21 @@ function PropertiesTable({ properties, sortKey, sortDir, onSort }: {
   );
 }
 
-function PosBadge({ pos }: { pos: number }) {
-  const cls = pos <= 3 ? "text-emerald-600 dark:text-emerald-400 font-bold" : pos <= 10 ? "text-emerald-600 dark:text-emerald-400" : pos <= 20 ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground";
-  return <span className={cls}>{pos.toFixed(1)}</span>;
-}
-
-function EmptyState() {
+function EmptyDash() {
   return (
-    <div className="rounded-2xl border-2 border-dashed border-border bg-muted/20 py-20 text-center">
-      <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-5">
-        <LineChart className="h-8 w-8 text-primary" />
-      </div>
-      <h3 className="text-xl font-bold mb-2">No properties connected</h3>
-      <p className="text-[13px] text-muted-foreground mb-8 max-w-sm mx-auto leading-relaxed">
-        Connect Google Search Console to see impressions, clicks, keyword rankings, and per-page performance.
-      </p>
-      <div className="flex gap-3 justify-center">
+    <div className="rounded-lg border-2 border-dashed border-border py-16 text-center">
+      <LineChart className="h-8 w-8 text-muted-foreground/30 mx-auto mb-4" />
+      <h3 className="font-display font-bold text-lg mb-2">No properties yet</h3>
+      <p className="text-[13px] text-muted-foreground mb-6 max-w-xs mx-auto">Connect Google Search Console to start tracking your sites.</p>
+      <div className="flex gap-2 justify-center">
         <Link href="/properties">
-          <button className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-semibold px-5 py-2.5 rounded-xl text-[13px] hover:bg-primary/90 transition-colors shadow-sm shadow-primary/20">
-            <LineChart className="h-4 w-4" /> Connect Search Console
+          <button className="flex items-center gap-2 bg-primary text-primary-foreground font-semibold px-4 py-2 rounded text-[13px] hover:bg-primary/90 transition-colors">
+            <LineChart className="h-3.5 w-3.5" /> Connect GSC
           </button>
         </Link>
         <Link href="/audit/new">
-          <button className="inline-flex items-center gap-2 border border-border text-[13px] font-medium px-5 py-2.5 rounded-xl hover:bg-muted transition-colors">
-            <Search className="h-4 w-4" /> Run a quick audit
+          <button className="flex items-center gap-2 border border-border text-[13px] font-medium px-4 py-2 rounded hover:bg-muted transition-colors">
+            <Search className="h-3.5 w-3.5" /> Quick audit
           </button>
         </Link>
       </div>
@@ -332,97 +288,98 @@ function EmptyState() {
   );
 }
 
-/* ─── Landing page ─────────────────────────────────────────────────────────── */
+/* ─── Landing page ─────────────────────────────────────────────────────── */
 
-const FEATURES = [
-  { icon: LineChart, grad: "from-blue-500 to-indigo-500", bg: "bg-blue-500/8 dark:bg-blue-500/12 border-blue-500/15", title: "Search Analytics", body: "Live impressions, clicks, CTR & position from Google Search Console with trend charts and sortable tables." },
-  { icon: Zap, grad: "from-amber-500 to-orange-500", bg: "bg-amber-500/8 dark:bg-amber-500/12 border-amber-500/15", title: "Technical Audits", body: "Crawl up to 500 pages with 9 analyzers covering meta, headings, links, schema, security, and Core Web Vitals." },
-  { icon: Sparkles, grad: "from-violet-500 to-purple-500", bg: "bg-violet-500/8 dark:bg-violet-500/12 border-violet-500/15", title: "AI Content Engine", body: "Full article generation from GSC ranking signals. Publishes directly to WordPress with Yoast & Rank Math support." },
-  { icon: Target, grad: "from-emerald-500 to-teal-500", bg: "bg-emerald-500/8 dark:bg-emerald-500/12 border-emerald-500/15", title: "Quick Wins", body: "Portfolio-wide table of keywords ranking positions 4–20 with real impressions — your fastest path to page one." },
-  { icon: KeyRound, grad: "from-rose-500 to-pink-500", bg: "bg-rose-500/8 dark:bg-rose-500/12 border-rose-500/15", title: "Keyword Research", body: "GSC-powered keyword discovery with striking-distance filters, semantic clustering, and competitor gap analysis." },
-  { icon: Users, grad: "from-indigo-500 to-cyan-500", bg: "bg-indigo-500/8 dark:bg-indigo-500/12 border-indigo-500/15", title: "Team Collaboration", body: "Invite members, assign properties, create tasks with priorities and due dates. Full role-based access control." },
-];
-
-function MarketingHome() {
+function Landing() {
   return (
-    <div className="overflow-x-hidden">
-      {/* ── Hero ── */}
-      <section className="relative min-h-[92vh] flex items-center isolate">
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,oklch(0.55_0.22_264/18%),transparent)]" />
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_50%_40%_at_80%_80%,oklch(0.65_0.20_310/12%),transparent)]" />
-        {/* Dot grid */}
-        <div className="absolute inset-0 -z-10 opacity-[0.35] dark:opacity-[0.15]"
-          style={{ backgroundImage: "radial-gradient(circle, oklch(0.55 0.22 264 / 35%) 1px, transparent 1px)", backgroundSize: "28px 28px" }} />
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-28 w-full">
-          <div className="max-w-4xl mx-auto text-center">
-            {/* Pill badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/20 bg-primary/5 text-[12px] font-semibold text-primary mb-8 backdrop-blur">
-              <span className="relative flex h-1.5 w-1.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
-              </span>
-              100% Free · Open Source · No subscriptions
-            </div>
-
-            <h1 className="text-5xl sm:text-6xl lg:text-[72px] font-extrabold tracking-tight leading-[1.04] mb-6">
-              The SEO platform that<br />
-              <span className="text-gradient">pays nothing.</span>
-            </h1>
-            <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed mb-10">
-              Replace Ahrefs, Semrush, and Surfer SEO with one self-hosted tool. Powered entirely by Google's free APIs and the AI of your choice.
+    <div>
+      {/* Hero — full bleed dark, left-aligned, editorial */}
+      <section className="bg-[oklch(0.09_0.008_264)] text-white relative overflow-hidden">
+        <div className="max-w-6xl mx-auto px-5 sm:px-8 pt-20 pb-24">
+          <div className="max-w-2xl">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-primary mb-6">
+              Open source · Self-hosted · Free forever
             </p>
-
-            <div className="flex flex-wrap items-center justify-center gap-3 mb-16">
+            <h1 className="font-display font-bold text-5xl sm:text-6xl leading-[1.04] tracking-tight mb-6">
+              The SEO platform<br />
+              <span className="text-gradient">you actually own.</span>
+            </h1>
+            <p className="text-white/55 text-[16px] leading-relaxed mb-10 max-w-xl">
+              Replace Ahrefs, Semrush, and Surfer with one self-hosted tool.
+              Real Google Search Console data, AI content generation, technical audits —
+              built on free APIs, zero subscription cost.
+            </p>
+            <div className="flex items-center gap-3 flex-wrap">
               <Link href="/register">
-                <button className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-semibold px-7 py-3.5 rounded-xl text-[15px] hover:bg-primary/90 transition-all shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-0.5 duration-200">
-                  Start for free <ArrowRight className="h-4 w-4" />
+                <button className="font-display font-semibold bg-primary text-primary-foreground px-6 py-3 rounded text-[14px] hover:bg-primary/90 transition-colors flex items-center gap-2">
+                  Get started free <ArrowRight className="h-4 w-4" />
                 </button>
               </Link>
               <Link href="/login">
-                <button className="inline-flex items-center gap-2 border border-border bg-background/80 backdrop-blur font-semibold px-7 py-3.5 rounded-xl text-[15px] hover:bg-muted transition-all duration-200">
-                  Sign in
+                <button className="font-medium text-white/60 hover:text-white text-[14px] px-4 py-3 transition-colors">
+                  Sign in →
                 </button>
               </Link>
             </div>
+          </div>
 
-            {/* Stats row */}
-            <div className="inline-flex flex-wrap items-center justify-center gap-px rounded-2xl border border-border overflow-hidden bg-card shadow-sm">
-              {[
-                { value: "9", label: "Audit analyzers" },
-                { value: "4", label: "AI providers" },
-                { value: "100%", label: "Free APIs" },
-                { value: "∞", label: "Properties" },
-              ].map((s, i) => (
-                <div key={s.label} className={`px-7 py-4 text-center ${i < 3 ? "border-r border-border" : ""}`}>
-                  <p className="text-2xl font-extrabold tabular-nums text-primary">{s.value}</p>
-                  <p className="text-[11px] text-muted-foreground font-medium mt-0.5">{s.label}</p>
-                </div>
-              ))}
-            </div>
+          {/* Data preview — right side, visible on lg */}
+          <div className="hidden lg:block absolute right-8 top-1/2 -translate-y-1/2 w-[380px]">
+            <DataPreview />
+          </div>
+        </div>
+
+        {/* Bottom stat strip */}
+        <div className="border-t border-white/8">
+          <div className="max-w-6xl mx-auto px-5 sm:px-8 py-5 grid grid-cols-2 sm:grid-cols-4 gap-px">
+            {[
+              { n: "9",    label: "Audit analyzers" },
+              { n: "4",    label: "AI providers" },
+              { n: "100%", label: "Free APIs" },
+              { n: "∞",    label: "Properties" },
+            ].map(s => (
+              <div key={s.label} className="py-2 sm:py-0 sm:px-6 first:pl-0">
+                <p className="font-display font-bold text-2xl text-white stat-num">{s.n}</p>
+                <p className="text-[11px] text-white/35 mt-0.5">{s.label}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* ── Features ── */}
-      <section className="py-28 border-t border-border/60">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-xl mx-auto mb-16">
-            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-primary mb-3">Platform</p>
-            <h2 className="text-4xl font-extrabold tracking-tight mb-4">One tool. Zero compromise.</h2>
-            <p className="text-muted-foreground text-[15px] leading-relaxed">Everything a paid SEO stack gives you — without the subscription.</p>
+      {/* Features — editorial two-column list */}
+      <section className="max-w-6xl mx-auto px-5 sm:px-8 py-20">
+        <div className="grid lg:grid-cols-[280px_1fr] gap-16">
+          <div>
+            <h2 className="font-display font-bold text-3xl leading-tight mb-4">
+              Every tool a serious SEO needs.
+            </h2>
+            <p className="text-[14px] text-muted-foreground leading-relaxed">
+              Built for practitioners who want data, not dashboards. No fluff, no upsells.
+            </p>
+            <Link href="/register">
+              <button className="mt-8 font-semibold text-[13px] text-primary hover:underline flex items-center gap-1">
+                Start free <ArrowRight className="h-3.5 w-3.5" />
+              </button>
+            </Link>
           </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {FEATURES.map((f) => {
+          <div className="grid sm:grid-cols-2 gap-x-10 gap-y-8">
+            {[
+              { icon: LineChart, label: "GSC Analytics",    body: "Live impressions, clicks, CTR, and position from Google Search Console. Per-query and per-page tables." },
+              { icon: Zap,       label: "Technical Audits", body: "Crawl up to 500 pages. 9 analyzers: meta, headings, links, images, schema, security, robots, sitemaps, performance." },
+              { icon: BarChart3, label: "AI Content Engine",body: "Full article generation using your GSC signals. Publishes to WordPress with Yoast and Rank Math support." },
+              { icon: Target,    label: "Quick Wins",       body: "Queries ranking positions 4–20 with real impressions. Your fastest path from page two to page one." },
+              { icon: KeyRound,  label: "Keyword Research", body: "GSC-powered discovery with striking-distance filters, semantic clustering, and competitor gap analysis." },
+              { icon: Users,     label: "Team & Tasks",     body: "Invite members, assign properties, create prioritized tasks with due dates. Full role-based access control." },
+            ].map(f => {
               const Icon = f.icon;
               return (
-                <div key={f.title} className={`group relative rounded-2xl border ${f.bg} p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-300`}>
-                  <div className={`h-11 w-11 rounded-xl bg-gradient-to-br ${f.grad} flex items-center justify-center mb-4 shadow-md group-hover:scale-110 transition-transform duration-200`}>
-                    <Icon className="h-5 w-5 text-white" />
+                <div key={f.label}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Icon className="h-4 w-4 text-primary shrink-0" />
+                    <p className="font-display font-semibold text-[14px]">{f.label}</p>
                   </div>
-                  <h3 className="font-bold text-[15px] mb-2">{f.title}</h3>
-                  <p className="text-muted-foreground text-[13px] leading-relaxed">{f.body}</p>
+                  <p className="text-[13px] text-muted-foreground leading-relaxed">{f.body}</p>
                 </div>
               );
             })}
@@ -430,77 +387,57 @@ function MarketingHome() {
         </div>
       </section>
 
-      {/* ── Why ── */}
-      <section className="py-24 border-t border-border/60 bg-muted/20">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-14">
-            <h2 className="text-3xl font-extrabold tracking-tight mb-3">Built on principles, not pricing.</h2>
-            <p className="text-muted-foreground text-[15px]">No vendor lock-in. No data harvesting. Just software you control.</p>
-          </div>
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              { icon: Shield, title: "Your data, your server", body: "Self-hosted. Nothing leaves your infrastructure. No third-party analytics, no data sharing with anyone." },
-              { icon: Globe, title: "All Google APIs. Free.", body: "Search Console, PageSpeed Insights, URL Inspection, Indexing API — official, free, fully integrated." },
-              { icon: Sparkles, title: "Any AI you choose", body: "Anthropic Claude, OpenAI, Google Gemini, or OpenRouter. Swap providers any time — no lock-in." },
-            ].map(({ icon: Icon, title, body }) => (
-              <div key={title} className="text-center space-y-3">
-                <div className="h-13 w-13 h-[52px] w-[52px] rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">
-                  <Icon className="h-6 w-6 text-primary" />
-                </div>
-                <h3 className="font-bold text-[16px]">{title}</h3>
-                <p className="text-[13px] text-muted-foreground leading-relaxed">{body}</p>
-              </div>
-            ))}
-          </div>
+      {/* Divider strip */}
+      <div className="border-y border-border bg-muted/30">
+        <div className="max-w-6xl mx-auto px-5 sm:px-8 py-10 grid sm:grid-cols-3 gap-8">
+          {[
+            { label: "Your data, your server",   body: "Self-hosted. Nothing leaves your infrastructure." },
+            { label: "All Google APIs. Free.",   body: "Search Console, PageSpeed, URL Inspection, Indexing API." },
+            { label: "Any AI you choose",        body: "Claude, GPT-4, Gemini, or OpenRouter. Swap any time." },
+          ].map(({ label, body }) => (
+            <div key={label}>
+              <p className="font-display font-semibold text-[14px] mb-1.5">{label}</p>
+              <p className="text-[13px] text-muted-foreground">{body}</p>
+            </div>
+          ))}
         </div>
-      </section>
+      </div>
 
-      {/* ── CTA ── */}
-      <section className="relative py-28 overflow-hidden border-t border-border/60 isolate">
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_70%_80%_at_50%_50%,oklch(0.55_0.22_264/12%),transparent)]" />
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/20 bg-primary/5 text-[12px] font-semibold text-primary mb-8">
-            <FileText className="h-3.5 w-3.5" />
-            No credit card required
+      {/* CTA */}
+      <section className="max-w-6xl mx-auto px-5 sm:px-8 py-20">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-8">
+          <div>
+            <h2 className="font-display font-bold text-3xl mb-2">Ready to get started?</h2>
+            <p className="text-[14px] text-muted-foreground">Free account. No credit card. Up in 5 minutes.</p>
           </div>
-          <h2 className="text-4xl sm:text-5xl font-extrabold tracking-tight mb-5">
-            Ready to own your<br />SEO workflow?
-          </h2>
-          <p className="text-muted-foreground text-[15px] mb-10 leading-relaxed max-w-lg mx-auto">
-            Create an account, connect Search Console, run your first audit. Takes under 5 minutes.
-          </p>
-          <div className="flex gap-3 justify-center flex-wrap">
+          <div className="flex items-center gap-3 shrink-0">
             <Link href="/register">
-              <button className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-bold px-8 py-4 rounded-xl text-[15px] hover:bg-primary/90 transition-all shadow-xl shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-0.5 duration-200">
-                Get started free <ArrowRight className="h-4 w-4" />
+              <button className="font-display font-semibold bg-primary text-primary-foreground px-6 py-3 rounded text-[14px] hover:bg-primary/90 transition-colors">
+                Create account
               </button>
             </Link>
             <a href="https://github.com/KuyaMecky/Full-FREE-SEO-TOOL" target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 border border-border bg-background font-semibold px-8 py-4 rounded-xl text-[15px] hover:bg-muted transition-all duration-200">
-              <GHIcon className="h-4 w-4" /> View on GitHub
+              className="font-medium text-[14px] text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5 border border-border px-4 py-3 rounded hover:bg-muted">
+              <GH className="h-4 w-4" /> GitHub
             </a>
           </div>
         </div>
       </section>
 
-      {/* ── Footer ── */}
-      <footer className="border-t border-border/60 bg-muted/10 py-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center shadow-md shadow-primary/20">
-              <BarChart3 className="h-4 w-4 text-primary-foreground" />
+      {/* Footer */}
+      <footer className="border-t border-border bg-muted/20">
+        <div className="max-w-6xl mx-auto px-5 sm:px-8 py-8 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="h-6 w-6 rounded bg-primary flex items-center justify-center">
+              <BarChart3 className="h-3.5 w-3.5 text-primary-foreground" />
             </div>
-            <div>
-              <span className="font-bold text-[14px]">SEO Audit Pro</span>
-              <span className="text-muted-foreground text-[12px] ml-2">by KuyaMecky</span>
-            </div>
+            <span className="font-display font-bold text-[13px]">SEO Audit Pro</span>
+            <span className="text-muted-foreground text-[12px] ml-1">by KuyaMecky</span>
           </div>
-          <div className="flex items-center gap-6 text-[12px] text-muted-foreground">
+          <div className="flex items-center gap-5 text-[12px] text-muted-foreground">
             <Link href="/login" className="hover:text-foreground transition-colors">Sign in</Link>
             <Link href="/register" className="hover:text-foreground transition-colors">Register</Link>
-            <a href="https://github.com/KuyaMecky/Full-FREE-SEO-TOOL" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors flex items-center gap-1.5">
-              <GHIcon className="h-3.5 w-3.5" /> GitHub
-            </a>
+            <a href="https://github.com/KuyaMecky/Full-FREE-SEO-TOOL" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">GitHub</a>
           </div>
         </div>
       </footer>
@@ -508,7 +445,49 @@ function MarketingHome() {
   );
 }
 
-function GHIcon({ className }: { className?: string }) {
+/* Mini data preview widget — hand-crafted, not a template */
+function DataPreview() {
+  const rows = [
+    { query: "seo audit tool",       pos: "4.2",  impr: "8.4k", ctr: "12.1%" },
+    { query: "free seo checker",     pos: "6.8",  impr: "5.1k", ctr: "8.4%"  },
+    { query: "google search console",pos: "11.3", impr: "3.7k", ctr: "5.2%"  },
+    { query: "technical seo audit",  pos: "3.1",  impr: "2.9k", ctr: "18.3%" },
+    { query: "keyword ranking tool",  pos: "8.6",  impr: "2.1k", ctr: "7.6%"  },
+  ];
+  return (
+    <div className="rounded-lg border border-white/10 bg-white/5 backdrop-blur overflow-hidden">
+      <div className="px-4 py-3 border-b border-white/8 flex items-center justify-between">
+        <p className="text-[11px] font-semibold text-white/60 uppercase tracking-[0.1em]">Quick Wins · Pos 4–20</p>
+        <span className="text-[10px] text-white/30">28 days</span>
+      </div>
+      <table className="w-full">
+        <thead>
+          <tr className="border-b border-white/8">
+            {["Query","Pos.","Impr.","CTR"].map(h => (
+              <th key={h} className="text-left px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.08em] text-white/30">{h}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r, i) => (
+            <tr key={i} className="border-b border-white/5 last:border-0 hover:bg-white/5">
+              <td className="px-4 py-2.5 text-[12px] text-white/70 truncate max-w-[140px]">{r.query}</td>
+              <td className="px-4 py-2.5 text-[12px] font-mono text-primary">{r.pos}</td>
+              <td className="px-4 py-2.5 text-[12px] font-mono text-white/50">{r.impr}</td>
+              <td className="px-4 py-2.5 text-[12px] font-mono text-white/50">{r.ctr}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div className="px-4 py-2.5 bg-primary/10 flex items-center gap-2">
+        <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+        <span className="text-[11px] text-primary/80">5 quick wins identified</span>
+      </div>
+    </div>
+  );
+}
+
+function GH({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor">
       <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.02 10.02 0 0 0 22 12.017C22 6.484 17.522 2 12 2Z" />
