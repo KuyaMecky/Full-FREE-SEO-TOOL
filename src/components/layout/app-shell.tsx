@@ -8,6 +8,7 @@ import {
   LogOut, BarChart3, Menu, X, Zap, KeyRound, Users, Target,
   FileCode, Gauge, FileSearch, Link2, PenLine, FileText,
   Bell, Sparkles, TrendingUp, ArrowLeftRight, ShieldCheck, Layers,
+  Activity, Link2 as LinkIcon, MonitorCheck, Eye, LayoutGrid, User,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
@@ -36,17 +37,27 @@ const NAV: Array<{ label?: string; items: NavItem[] }> = [
       { href: "/performance",    label: "Performance",    icon: Gauge },
       { href: "/keywords",       label: "Keywords",       icon: KeyRound },
       { href: "/competitors",    label: "Competitors",    icon: Users },
-      { href: "/content",        label: "Content Planner",icon: PenLine },
-      { href: "/content/drafts", label: "Drafts",         icon: FileText },
       { href: "/onpage",         label: "On-page",        icon: Zap },
       { href: "/indexing",       label: "URL Inspection", icon: Search },
       { href: "/schema-check",   label: "Schema Check",   icon: FileSearch },
       { href: "/schema",           label: "Schema Gen",       icon: FileCode },
       { href: "/backlinks",        label: "Backlinks",        icon: Link2 },
       { href: "/rank-tracker",     label: "Rank Tracker",     icon: TrendingUp },
+      { href: "/cwv-history",      label: "CWV History",      icon: Activity },
       { href: "/redirect-chain",   label: "Redirect Chain",   icon: ArrowLeftRight },
       { href: "/robots-validator", label: "Robots & Sitemap", icon: ShieldCheck },
-      { href: "/bulk-inspect",     label: "Bulk URL Inspect", icon: Layers },
+      { href: "/bulk-inspect",     label: "Bulk Inspect",     icon: Layers },
+      { href: "/internal-links",   label: "Internal Links",   icon: LinkIcon },
+      { href: "/page-monitor",     label: "Page Monitor",     icon: MonitorCheck },
+      { href: "/serp-preview",     label: "SERP Preview",     icon: Eye },
+    ],
+  },
+  {
+    label: "Content",
+    items: [
+      { href: "/content",          label: "Content Planner",  icon: PenLine },
+      { href: "/content/drafts",   label: "Drafts",           icon: FileText },
+      { href: "/content/calendar", label: "Calendar",         icon: LayoutGrid },
     ],
   },
   {
@@ -59,8 +70,9 @@ const NAV: Array<{ label?: string; items: NavItem[] }> = [
   {
     label: "Workspace",
     items: [
-      { href: "/team",     label: "Team",     icon: Users },
-      { href: "/settings", label: "Settings", icon: Settings },
+      { href: "/team",              label: "Team",            icon: Users },
+      { href: "/settings",          label: "Settings",        icon: Settings },
+      { href: "/settings/account",  label: "My Account",      icon: User },
     ],
   },
 ];
@@ -203,9 +215,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 className="h-8 w-8 rounded flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors" title="GitHub">
                 <GH className="h-4 w-4" />
               </a>
-              <button className="h-8 w-8 rounded flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
-                <Bell className="h-4 w-4" />
-              </button>
+              <NotificationBell />
               <span className="w-px h-4 bg-border mx-1" />
               <ThemeToggle />
               {user && (
@@ -229,6 +239,61 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </a>
         </footer>
       </div>
+    </div>
+  );
+}
+
+function NotificationBell() {
+  const [unread, setUnread] = React.useState(0);
+  const [open, setOpen] = React.useState(false);
+  const [notifications, setNotifications] = React.useState<Array<{ id: string; title: string; body: string; read: boolean; createdAt: string; link?: string }>>([]);
+
+  React.useEffect(() => {
+    fetch("/api/notifications")
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d) { setUnread(d.unreadCount ?? 0); setNotifications(d.notifications ?? []); } })
+      .catch(() => {});
+  }, []);
+
+  async function markAllRead() {
+    await fetch("/api/notifications", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({}) });
+    setUnread(0);
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  }
+
+  return (
+    <div className="relative">
+      <button onClick={() => setOpen(o => !o)}
+        className="relative h-8 w-8 rounded flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
+        <Bell className="h-4 w-4" />
+        {unread > 0 && (
+          <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-primary ring-2 ring-background" />
+        )}
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div className="absolute right-0 top-10 z-50 w-80 rounded-lg border border-border bg-card shadow-xl overflow-hidden">
+            <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+              <p className="font-semibold text-[13px]">Notifications</p>
+              {unread > 0 && (
+                <button onClick={markAllRead} className="text-[11px] text-primary hover:underline">Mark all read</button>
+              )}
+            </div>
+            <div className="max-h-80 overflow-y-auto divide-y divide-border">
+              {notifications.length === 0 ? (
+                <p className="text-[12px] text-muted-foreground text-center py-6">No notifications</p>
+              ) : notifications.map(n => (
+                <div key={n.id} className={`px-4 py-3 ${n.read ? "" : "bg-primary/5"}`}>
+                  <p className={`text-[12px] font-medium ${n.read ? "text-muted-foreground" : "text-foreground"}`}>{n.title}</p>
+                  {n.body && <p className="text-[11px] text-muted-foreground mt-0.5">{n.body}</p>}
+                  <p className="text-[10px] text-muted-foreground/60 mt-1">{new Date(n.createdAt).toLocaleString()}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -291,10 +356,16 @@ function getTitle(p: string): string {
   if (p === "/audit/new") return "New Audit";
   if (p.startsWith("/audit/")) return "Audit Report";
   if (p === "/history") return "Audit History";
-  if (p === "/rank-tracker")     return "Rank Tracker";
-  if (p === "/redirect-chain")   return "Redirect Chain Auditor";
-  if (p === "/robots-validator") return "Robots & Sitemap Validator";
-  if (p === "/bulk-inspect")     return "Bulk URL Inspector";
+  if (p === "/rank-tracker")       return "Rank Tracker";
+  if (p === "/cwv-history")        return "Core Web Vitals History";
+  if (p === "/redirect-chain")     return "Redirect Chain Auditor";
+  if (p === "/robots-validator")   return "Robots & Sitemap Validator";
+  if (p === "/bulk-inspect")       return "Bulk URL Inspector";
+  if (p === "/internal-links")     return "Internal Linking Map";
+  if (p === "/page-monitor")       return "Page Change Monitor";
+  if (p === "/serp-preview")       return "SERP Snippet Preview";
+  if (p === "/content/calendar")   return "Content Calendar";
+  if (p === "/settings/account")   return "Account Settings";
   if (p === "/team") return "Team";
   if (p === "/settings") return "Settings";
   if (p.startsWith("/settings/")) return "Settings";

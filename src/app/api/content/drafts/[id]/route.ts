@@ -57,6 +57,7 @@ export async function PUT(
   if (body?.imageSuggestions !== undefined) data.imageSuggestions = JSON.stringify(body.imageSuggestions);
   if (typeof body?.wpConnectionId === "string") data.wpConnectionId = body.wpConnectionId;
   if (typeof body?.clusterId === "string") data.clusterId = body.clusterId;
+  if (typeof body?.status === "string") data.status = body.status;
 
   const draft = await prisma.contentDraft.update({ where: { id }, data });
   return NextResponse.json({ draft });
