@@ -23,6 +23,7 @@ import {
   FileSearch,
   Link2,
   PenLine,
+  FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -63,6 +64,7 @@ const NAV_SECTIONS: Array<{ label?: string; items: NavItem[] }> = [
       { href: "/keywords", label: "Keywords", icon: KeyRound },
       { href: "/competitors", label: "Competitors", icon: Users },
       { href: "/content", label: "Content", icon: PenLine },
+      { href: "/content/drafts", label: "Drafts", icon: FileText },
       { href: "/onpage", label: "On-page", icon: Zap },
       { href: "/indexing", label: "Indexing", icon: Search },
       { href: "/schema-check", label: "Schema Check", icon: FileSearch },
@@ -322,6 +324,9 @@ function getPageTitle(pathname: string): string {
   if (pathname === "/indexing") return "URL Inspection";
   if (pathname === "/backlinks") return "Backlinks";
   if (pathname === "/content") return "Content Planner";
+  if (pathname === "/content/drafts") return "Content · Drafts";
+  if (pathname.startsWith("/content/drafts/")) return "Content · Draft Editor";
+  if (pathname.startsWith("/settings/integrations/wordpress")) return "Settings · WordPress";
   if (pathname === "/audit/new") return "New Audit";
   if (pathname.startsWith("/audit/")) return "Audit · Detail";
   if (pathname === "/history") return "History";

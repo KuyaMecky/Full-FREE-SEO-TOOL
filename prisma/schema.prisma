@@ -8,168 +8,165 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  password      String    // hashed password
-  name          String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  audits        Audit[]
-  googleAccount GoogleAccount?
-  gscProperties GscProperty[]
+  id               String                @id @default(cuid())
+  email            String                @unique
+  password         String
+  name             String?
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+  audits           Audit[]
+  googleAccount    GoogleAccount?
+  gscProperties    GscProperty[]
+  wpConnections    WordPressConnection[]
+  contentDrafts    ContentDraft[]
+  contentClusters  ContentCluster[]
 }
 
 model GoogleAccount {
-  id             String   @id @default(cuid())
-  userId         String   @unique
+  id             String        @id @default(cuid())
+  userId         String        @unique
   googleEmail    String
   accessToken    String
   refreshToken   String
   tokenExpiresAt DateTime
-  scope          String   @default("")
-  connectedAt    DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  properties GscProperty[]
+  scope          String        @default("")
+  connectedAt    DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  properties     GscProperty[]
 }
 
 model GscProperty {
-  id              String   @id @default(cuid())
+  id              String            @id @default(cuid())
   userId          String
   googleAccountId String
-  siteUrl         String   // e.g. "sc-domain:example.com" or "https://example.com/"
-  permissionLevel String   @default("") // siteOwner | siteFullUser | siteRestrictedUser
-  addedAt         DateTime @default(now())
+  siteUrl         String
+  permissionLevel String            @default("")
+  addedAt         DateTime          @default(now())
+  googleAccount   GoogleAccount     @relation(fields: [googleAccountId], references: [id], onDelete: Cascade)
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  snapshots       GscSnapshot[]
+  submissions     IndexSubmission[]
+  contentDrafts   ContentDraft[]
+  contentClusters ContentCluster[]
 
-  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  googleAccount GoogleAccount     @relation(fields: [googleAccountId], references: [id], onDelete: Cascade)
-  snapshots     GscSnapshot[]
-  submissions   IndexSubmission[]
-
-  @@index([userId])
   @@unique([googleAccountId, siteUrl])
+  @@index([userId])
 }
 
 model IndexSubmission {
-  id                String   @id @default(cuid())
+  id                String      @id @default(cuid())
   userId            String
   propertyId        String
   url               String
-  note              String   @default("")
-  status            String   @default("pending") // pending | requested | indexed | not_indexed | error
-  lastIndexVerdict  String?  // PASS | PARTIAL | FAIL | NEUTRAL from inspect
+  note              String      @default("")
+  status            String      @default("pending")
+  lastIndexVerdict  String?
   lastCoverageState String?
   lastFetchState    String?
   lastCrawlTime     DateTime?
   lastCheckedAt     DateTime?
-  submittedAt       DateTime @default(now())
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  submittedAt       DateTime    @default(now())
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  property          GscProperty @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 
-  property GscProperty @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-
+  @@unique([propertyId, url])
   @@index([userId])
   @@index([propertyId])
-  @@unique([propertyId, url])
 }
 
 model GscSnapshot {
-  id               String   @id @default(cuid())
+  id               String      @id @default(cuid())
   propertyId       String
   rangeStart       DateTime
   rangeEnd         DateTime
-  totalImpressions Int      @default(0)
-  totalClicks      Int      @default(0)
-  avgCtr           Float    @default(0)
-  avgPosition      Float    @default(0)
-  byDate           String   @default("[]")   // JSON
-  byQuery          String   @default("[]")   // JSON
-  byPage           String   @default("[]")   // JSON
-  suggestions      String   @default("null") // JSON, null until generated
-  fetchedAt        DateTime @default(now())
-
-  property GscProperty @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  totalImpressions Int         @default(0)
+  totalClicks      Int         @default(0)
+  avgCtr           Float       @default(0)
+  avgPosition      Float       @default(0)
+  byDate           String      @default("[]")
+  byQuery          String      @default("[]")
+  byPage           String      @default("[]")
+  suggestions      String      @default("null")
+  fetchedAt        DateTime    @default(now())
+  property         GscProperty @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 
   @@index([propertyId])
 }
 
 model Audit {
-  id            String        @id @default(cuid())
-  userId        String
-  domain        String
-  country       String        @default("US")
-  language      String        @default("en")
-  businessType  String        @default("")
-  goals         String        @default("[]") // JSON array
-  priorityPages String        @default("[]") // JSON array
-  competitors   String        @default("[]") // JSON array
-  seedKeywords  String        @default("[]") // JSON array
-  cmsStack      String        @default("")
-  maxPages      Int           @default(50)
-  status        String        @default("pending") // pending, crawling, analyzing, complete, error
-  overallScore  Float?
-  errorMessage  String?
-  keywordReport String?       // JSON, filled by /api/audit/[id]/keywords
-  competitorReport String?    // JSON, filled by /api/audit/[id]/competitors
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-
-  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  crawlResults  CrawlResult[]
-  findings      Finding[]
-  report        AuditReport?
-  cwvResults    CwvResult[]
+  id               String        @id @default(cuid())
+  userId           String
+  domain           String
+  country          String        @default("US")
+  language         String        @default("en")
+  businessType     String        @default("")
+  goals            String        @default("[]")
+  priorityPages    String        @default("[]")
+  competitors      String        @default("[]")
+  seedKeywords     String        @default("[]")
+  cmsStack         String        @default("")
+  maxPages         Int           @default(50)
+  status           String        @default("pending")
+  overallScore     Float?
+  errorMessage     String?
+  keywordReport    String?
+  competitorReport String?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  user             User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  report           AuditReport?
+  crawlResults     CrawlResult[]
+  cwvResults       CwvResult[]
+  findings         Finding[]
 
   @@index([userId])
 }
 
 model CwvResult {
-  id               String   @id @default(cuid())
-  auditId          String
-  url              String
-  strategy         String   // "mobile" | "desktop"
-  performanceScore Float?   // 0-100
+  id                 String   @id @default(cuid())
+  auditId            String
+  url                String
+  strategy           String
+  performanceScore   Float?
   accessibilityScore Float?
-  seoScore         Float?
+  seoScore           Float?
   bestPracticesScore Float?
-  lcpMs            Int?     // Largest Contentful Paint (ms)
-  fcpMs            Int?     // First Contentful Paint
-  clsScore         Float?   // Cumulative Layout Shift (unitless)
-  inpMs            Int?     // Interaction to Next Paint (field metric) or TBT fallback
-  ttfbMs           Int?     // Time to First Byte
-  speedIndex       Int?
-  fieldData        String   @default("null") // JSON: CrUX origin / URL-level field metrics
-  topIssues        String   @default("[]")   // JSON: [{id, title, description, savingsMs}]
-  fetchedAt        DateTime @default(now())
+  lcpMs              Int?
+  fcpMs              Int?
+  clsScore           Float?
+  inpMs              Int?
+  ttfbMs             Int?
+  speedIndex         Int?
+  fieldData          String   @default("null")
+  topIssues          String   @default("[]")
+  fetchedAt          DateTime @default(now())
+  audit              Audit    @relation(fields: [auditId], references: [id], onDelete: Cascade)
 
-  audit Audit @relation(fields: [auditId], references: [id], onDelete: Cascade)
-
-  @@index([auditId])
   @@unique([auditId, url, strategy])
+  @@index([auditId])
 }
 
 model CrawlResult {
-  id             String   @id @default(cuid())
-  auditId        String
-  url            String
-  statusCode     Int
-  title          String   @default("")
-  metaDescription String  @default("")
-  canonical      String   @default("")
-  h1             String   @default("")
-  headings       String   @default("[]") // JSON
-  links          String   @default("[]") // JSON
-  images         String   @default("[]") // JSON
-  structuredData String   @default("[]") // JSON
-  issues         String   @default("[]") // JSON
-  responseTime   Int      @default(0) // ms
-  contentLength  Int      @default(0)
-  robotsMeta     String   @default("")
-  createdAt      DateTime @default(now())
-
-  audit Audit @relation(fields: [auditId], references: [id], onDelete: Cascade)
+  id              String   @id @default(cuid())
+  auditId         String
+  url             String
+  statusCode      Int
+  title           String   @default("")
+  metaDescription String   @default("")
+  canonical       String   @default("")
+  h1              String   @default("")
+  headings        String   @default("[]")
+  links           String   @default("[]")
+  images          String   @default("[]")
+  structuredData  String   @default("[]")
+  issues          String   @default("[]")
+  responseTime    Int      @default(0)
+  contentLength   Int      @default(0)
+  robotsMeta      String   @default("")
+  createdAt       DateTime @default(now())
+  audit           Audit    @relation(fields: [auditId], references: [id], onDelete: Cascade)
 
   @@index([auditId])
 }
@@ -177,40 +174,89 @@ model CrawlResult {
 model Finding {
   id             String   @id @default(cuid())
   auditId        String
-  category       String   // technical, on-page, content, ux-performance
+  category       String
   issue          String
   evidence       String   @default("")
-  affectedUrls   String   @default("[]") // JSON array
-  severity       String   // critical, high, medium, low
+  affectedUrls   String   @default("[]")
+  severity       String
   impact         String   @default("")
   recommendedFix String   @default("")
-  owner          String   @default("") // dev, content, marketing
-  effort         String   @default("") // low, medium, high
+  owner          String   @default("")
+  effort         String   @default("")
   priority       Int      @default(0)
   createdAt      DateTime @default(now())
-
-  audit Audit @relation(fields: [auditId], references: [id], onDelete: Cascade)
+  audit          Audit    @relation(fields: [auditId], references: [id], onDelete: Cascade)
 
   @@index([auditId])
 }
 
 model AuditReport {
-  id                String   @id @default(cuid())
-  auditId           String   @unique
-  executiveSummary  String   @default("{}") // JSON
-  scorecard         String   @default("{}") // JSON
-  roadmap           String   @default("{}") // JSON
-  kpiPlan           String   @default("{}") // JSON
-  actionItems       String   @default("[]") // JSON
-  stakeholderSummary String  @default("")
-  devTaskList       String   @default("[]") // JSON
-  createdAt         DateTime @default(now())
-
-  audit Audit @relation(fields: [auditId], references: [id], onDelete: Cascade)
+  id                 String   @id @default(cuid())
+  auditId            String   @unique
+  executiveSummary   String   @default("{}")
+  scorecard          String   @default("{}")
+  roadmap            String   @default("{}")
+  kpiPlan            String   @default("{}")
+  actionItems        String   @default("[]")
+  stakeholderSummary String   @default("")
+  devTaskList        String   @default("[]")
+  createdAt          DateTime @default(now())
+  audit              Audit    @relation(fields: [auditId], references: [id], onDelete: Cascade)
 }
 
 model Settings {
   id    String @id @default(cuid())
   key   String @unique
   value String @default("")
+}
+
+model WordPressConnection {
+  id          String         @id @default(cuid())
+  userId      String
+  label       String         @default("My WordPress Site")
+  siteUrl     String
+  username    String
+  appPassword String
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  user        User           @relation(fields: [userId], references: [id])
+  drafts      ContentDraft[]
+}
+
+model ContentCluster {
+  id          String         @id @default(cuid())
+  userId      String
+  propertyId  String
+  name        String
+  pillarTopic String
+  createdAt   DateTime       @default(now())
+  user        User           @relation(fields: [userId], references: [id])
+  property    GscProperty    @relation(fields: [propertyId], references: [id])
+  drafts      ContentDraft[]
+}
+
+model ContentDraft {
+  id               String               @id @default(cuid())
+  userId           String
+  propertyId       String
+  clusterId        String?
+  wpConnectionId   String?
+  title            String
+  slug             String
+  metaTitle        String
+  metaDescription  String
+  focusKeyword     String
+  content          String
+  schemaMarkup     String?
+  internalLinks    String               @default("[]")
+  imageSuggestions String               @default("[]")
+  status           String               @default("draft")
+  wpPostId         Int?
+  gscSignals       String               @default("{}")
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  user             User                 @relation(fields: [userId], references: [id])
+  property         GscProperty          @relation(fields: [propertyId], references: [id])
+  cluster          ContentCluster?      @relation(fields: [clusterId], references: [id])
+  wpConnection     WordPressConnection? @relation(fields: [wpConnectionId], references: [id])
 }

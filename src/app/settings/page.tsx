@@ -8,7 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { LineChart, ArrowRight, Sparkles, Gauge, Settings as SettingsIcon } from "lucide-react";
+import { LineChart, ArrowRight, Sparkles, Gauge, Globe, Settings as SettingsIcon } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { HelpBanner } from "@/components/help-banner";
 import { GUIDES } from "@/lib/guides";
@@ -56,6 +56,20 @@ export default function SettingsPage() {
                 <div className="text-sm text-muted-foreground mt-1">
                   Choose Anthropic Claude, OpenAI, or Google Gemini for
                   audit reports and GSC suggestions.
+                </div>
+              </div>
+              <ArrowRight className="h-4 w-4 text-muted-foreground/70" />
+            </div>
+          </Link>
+          <Link href="/settings/integrations/wordpress">
+            <div className="flex items-center justify-between p-4 border rounded-md hover:bg-muted/40 cursor-pointer">
+              <div>
+                <div className="font-medium flex items-center gap-2">
+                  <Globe className="h-4 w-4 text-sky-600" />
+                  WordPress
+                </div>
+                <div className="text-sm text-muted-foreground mt-1">
+                  Publish AI-generated drafts directly to your WordPress site via Application Password.
                 </div>
               </div>
               <ArrowRight className="h-4 w-4 text-muted-foreground/70" />
