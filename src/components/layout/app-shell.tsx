@@ -7,7 +7,7 @@ import {
   LayoutDashboard, LineChart, Search, History, Settings,
   LogOut, BarChart3, Menu, X, Zap, KeyRound, Users, Target,
   FileCode, Gauge, FileSearch, Link2, PenLine, FileText,
-  Bell, Sparkles,
+  Bell, Sparkles, TrendingUp, ArrowLeftRight, ShieldCheck, Layers,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
@@ -41,8 +41,12 @@ const NAV: Array<{ label?: string; items: NavItem[] }> = [
       { href: "/onpage",         label: "On-page",        icon: Zap },
       { href: "/indexing",       label: "URL Inspection", icon: Search },
       { href: "/schema-check",   label: "Schema Check",   icon: FileSearch },
-      { href: "/schema",         label: "Schema Gen",     icon: FileCode },
-      { href: "/backlinks",      label: "Backlinks",      icon: Link2 },
+      { href: "/schema",           label: "Schema Gen",       icon: FileCode },
+      { href: "/backlinks",        label: "Backlinks",        icon: Link2 },
+      { href: "/rank-tracker",     label: "Rank Tracker",     icon: TrendingUp },
+      { href: "/redirect-chain",   label: "Redirect Chain",   icon: ArrowLeftRight },
+      { href: "/robots-validator", label: "Robots & Sitemap", icon: ShieldCheck },
+      { href: "/bulk-inspect",     label: "Bulk URL Inspect", icon: Layers },
     ],
   },
   {
@@ -287,6 +291,10 @@ function getTitle(p: string): string {
   if (p === "/audit/new") return "New Audit";
   if (p.startsWith("/audit/")) return "Audit Report";
   if (p === "/history") return "Audit History";
+  if (p === "/rank-tracker")     return "Rank Tracker";
+  if (p === "/redirect-chain")   return "Redirect Chain Auditor";
+  if (p === "/robots-validator") return "Robots & Sitemap Validator";
+  if (p === "/bulk-inspect")     return "Bulk URL Inspector";
   if (p === "/team") return "Team";
   if (p === "/settings") return "Settings";
   if (p.startsWith("/settings/")) return "Settings";

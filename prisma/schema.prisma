@@ -24,6 +24,8 @@ model User {
   teamMemberships  TeamMember[]
   assignedTasks    PropertyAssignment[] @relation("AssignedTo")
   createdTasks     PropertyAssignment[] @relation("AssignedBy")
+  rankKeywords     RankKeyword[]
+  pageSnapshots    PageSnapshot[]
 }
 
 model GoogleAccount {
@@ -41,19 +43,23 @@ model GoogleAccount {
 }
 
 model GscProperty {
-  id              String            @id @default(cuid())
-  userId          String
-  googleAccountId String
-  siteUrl         String
-  permissionLevel String            @default("")
-  addedAt         DateTime          @default(now())
-  googleAccount   GoogleAccount     @relation(fields: [googleAccountId], references: [id], onDelete: Cascade)
-  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  snapshots       GscSnapshot[]
-  submissions     IndexSubmission[]
-  contentDrafts   ContentDraft[]
-  contentClusters ContentCluster[]
-  assignments     PropertyAssignment[]
+  id                 String               @id @default(cuid())
+  userId             String
+  googleAccountId    String
+  siteUrl            String
+  permissionLevel    String               @default("")
+  addedAt            DateTime             @default(now())
+  autoRefresh        Boolean              @default(false)
+  lastAutoRefresh    DateTime?
+  googleAccount      GoogleAccount        @relation(fields: [googleAccountId], references: [id], onDelete: Cascade)
+  user               User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  snapshots          GscSnapshot[]
+  submissions        IndexSubmission[]
+  contentDrafts      ContentDraft[]
+  contentClusters    ContentCluster[]
+  assignments        PropertyAssignment[]
+  rankKeywords       RankKeyword[]
+  pageSnapshots      PageSnapshot[]
 
   @@unique([googleAccountId, siteUrl])
   @@index([userId])
@@ -213,6 +219,55 @@ model Settings {
   id    String @id @default(cuid())
   key   String @unique
   value String @default("")
+}
+
+model RankKeyword {
+  id         String           @id @default(cuid())
+  userId     String
+  propertyId String
+  keyword    String
+  createdAt  DateTime         @default(now())
+  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  property   GscProperty      @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  snapshots  RankSnapshot[]
+
+  @@unique([propertyId, keyword])
+  @@index([userId])
+  @@index([propertyId])
+}
+
+model RankSnapshot {
+  id         String      @id @default(cuid())
+  keywordId  String
+  date       DateTime
+  position   Float
+  impressions Int        @default(0)
+  clicks     Int         @default(0)
+  ctr        Float       @default(0)
+  keyword    RankKeyword @relation(fields: [keywordId], references: [id], onDelete: Cascade)
+
+  @@unique([keywordId, date])
+  @@index([keywordId])
+}
+
+model PageSnapshot {
+  id              String      @id @default(cuid())
+  userId          String
+  propertyId      String
+  url             String
+  title           String      @default("")
+  metaDescription String      @default("")
+  h1              String      @default("")
+  wordCount       Int         @default(0)
+  internalLinks   Int         @default(0)
+  externalLinks   Int         @default(0)
+  rawData         String      @default("{}")
+  takenAt         DateTime    @default(now())
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  property        GscProperty @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([propertyId, url])
 }
 
 model Team {
