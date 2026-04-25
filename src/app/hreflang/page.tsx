@@ -92,9 +92,12 @@ export default function HreflangPage() {
                         </div>
                       </div>
                       {reciprocal && (
-                        reciprocal.hasReciprocal
-                          ? <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />
-                          : <XCircle className="h-4 w-4 text-red-500 shrink-0" title={reciprocal.error ?? "No reciprocal"} />
+                        <div title={!reciprocal.hasReciprocal ? reciprocal.error ?? "No reciprocal" : undefined}>
+                          {reciprocal.hasReciprocal
+                            ? <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />
+                            : <XCircle className="h-4 w-4 text-red-500 shrink-0" />
+                          }
+                        </div>
                       )}
                     </div>
                   );

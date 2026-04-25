@@ -125,7 +125,7 @@ export async function POST(request: NextRequest) {
     );
 
     const buf = await renderToBuffer(doc);
-    return new NextResponse(buf, {
+    return new NextResponse(Buffer.from(buf), {
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": `attachment; filename="seo-report-${domain}-${Date.now()}.pdf"`,

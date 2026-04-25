@@ -9,7 +9,7 @@ import {
   FileCode, Gauge, FileSearch, Link2, PenLine, FileText,
   Bell, Sparkles, TrendingUp, ArrowLeftRight, ShieldCheck, Layers,
   Activity, Link2 as LinkIcon, MonitorCheck, Eye, LayoutGrid, User,
-  BarChart2, AlertTriangle, LinkIcon as BrokenLinkIcon, Languages, Bell as BellIcon, BookOpen,
+  BarChart2, AlertTriangle, AlertCircle, Languages, Bell as BellIcon, BookOpen,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
