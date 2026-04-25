@@ -9,6 +9,7 @@ import {
   FileCode, Gauge, FileSearch, Link2, PenLine, FileText,
   Bell, Sparkles, TrendingUp, ArrowLeftRight, ShieldCheck, Layers,
   Activity, Link2 as LinkIcon, MonitorCheck, Eye, LayoutGrid, User,
+  BarChart2, AlertTriangle, LinkIcon as BrokenLinkIcon, Languages, Bell as BellIcon, BookOpen,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
@@ -50,6 +51,10 @@ const NAV: Array<{ label?: string; items: NavItem[] }> = [
       { href: "/internal-links",   label: "Internal Links",   icon: LinkIcon },
       { href: "/page-monitor",     label: "Page Monitor",     icon: MonitorCheck },
       { href: "/serp-preview",     label: "SERP Preview",     icon: Eye },
+      { href: "/cannibalization",  label: "Cannibalization",  icon: AlertTriangle },
+      { href: "/broken-links",     label: "Broken Links",     icon: AlertCircle },
+      { href: "/hreflang",         label: "Hreflang",         icon: Languages },
+      { href: "/analytics",        label: "GA4 Analytics",    icon: BarChart2 },
     ],
   },
   {
@@ -71,6 +76,7 @@ const NAV: Array<{ label?: string; items: NavItem[] }> = [
     label: "Workspace",
     items: [
       { href: "/team",              label: "Team",            icon: Users },
+      { href: "/alerts",            label: "Alert Rules",     icon: BellIcon },
       { href: "/settings",          label: "Settings",        icon: Settings },
       { href: "/settings/account",  label: "My Account",      icon: User },
     ],
@@ -366,6 +372,11 @@ function getTitle(p: string): string {
   if (p === "/serp-preview")       return "SERP Snippet Preview";
   if (p === "/content/calendar")   return "Content Calendar";
   if (p === "/settings/account")   return "Account Settings";
+  if (p === "/cannibalization")    return "Keyword Cannibalization";
+  if (p === "/broken-links")       return "Broken Link Checker";
+  if (p === "/hreflang")           return "Hreflang Validator";
+  if (p === "/analytics")          return "Google Analytics 4";
+  if (p === "/alerts")             return "Alert Rules";
   if (p === "/team") return "Team";
   if (p === "/settings") return "Settings";
   if (p.startsWith("/settings/")) return "Settings";

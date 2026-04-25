@@ -29,6 +29,7 @@ model User {
   userSettings     UserSettings?
   cwvHistory       CwvHistory[]
   notifications    Notification[]
+  alertRules       AlertRule[]
 }
 
 model GoogleAccount {
@@ -222,6 +223,22 @@ model Settings {
   id    String @id @default(cuid())
   key   String @unique
   value String @default("")
+}
+
+model AlertRule {
+  id          String   @id @default(cuid())
+  userId      String
+  propertyId  String?
+  name        String
+  metric      String   // avg_position | ctr | impressions | rank_drop | deindex
+  operator    String   // lt | gt | drops_by
+  threshold   Float
+  enabled     Boolean  @default(true)
+  lastFiredAt DateTime?
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model UserSettings {
@@ -423,6 +440,7 @@ model ContentDraft {
   internalLinks    String               @default("[]")
   imageSuggestions String               @default("[]")
   status           String               @default("draft")
+  scheduledAt      DateTime?
   wpPostId         Int?
   gscSignals       String               @default("{}")
   createdAt        DateTime             @default(now())
