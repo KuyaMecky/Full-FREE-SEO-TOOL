@@ -20,6 +20,10 @@ model User {
   wpConnections    WordPressConnection[]
   contentDrafts    ContentDraft[]
   contentClusters  ContentCluster[]
+  ownedTeams       Team[]               @relation("TeamOwner")
+  teamMemberships  TeamMember[]
+  assignedTasks    PropertyAssignment[] @relation("AssignedTo")
+  createdTasks     PropertyAssignment[] @relation("AssignedBy")
 }
 
 model GoogleAccount {
@@ -49,6 +53,7 @@ model GscProperty {
   submissions     IndexSubmission[]
   contentDrafts   ContentDraft[]
   contentClusters ContentCluster[]
+  assignments     PropertyAssignment[]
 
   @@unique([googleAccountId, siteUrl])
   @@index([userId])
@@ -208,6 +213,71 @@ model Settings {
   id    String @id @default(cuid())
   key   String @unique
   value String @default("")
+}
+
+model Team {
+  id          String               @id @default(cuid())
+  name        String
+  ownerId     String
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  owner       User                 @relation("TeamOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members     TeamMember[]
+  invites     TeamInvite[]
+  assignments PropertyAssignment[]
+
+  @@index([ownerId])
+}
+
+model TeamMember {
+  id       String   @id @default(cuid())
+  teamId   String
+  userId   String
+  role     String   @default("member")
+  joinedAt DateTime @default(now())
+  team     Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, userId])
+  @@index([userId])
+}
+
+model TeamInvite {
+  id        String   @id @default(cuid())
+  teamId    String
+  email     String
+  token     String   @unique @default(cuid())
+  role      String   @default("member")
+  status    String   @default("pending")
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@index([teamId])
+  @@index([token])
+}
+
+model PropertyAssignment {
+  id           String      @id @default(cuid())
+  teamId       String
+  propertyId   String
+  assignedToId String
+  assignedById String
+  title        String
+  description  String      @default("")
+  priority     String      @default("medium")
+  status       String      @default("open")
+  dueDate      DateTime?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  team         Team        @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  property     GscProperty @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  assignedTo   User        @relation("AssignedTo", fields: [assignedToId], references: [id])
+  assignedBy   User        @relation("AssignedBy", fields: [assignedById], references: [id])
+
+  @@index([teamId])
+  @@index([assignedToId])
+  @@index([propertyId])
 }
 
 model WordPressConnection {
