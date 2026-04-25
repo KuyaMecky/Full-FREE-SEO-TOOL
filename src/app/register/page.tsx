@@ -3,10 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, BarChart3, AlertCircle, CheckCircle, Shield, Sparkles, Users } from "lucide-react";
 
 export default function RegisterPage() {
@@ -14,7 +12,7 @@ export default function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
@@ -22,7 +20,7 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    if (password !== confirmPassword) { setError("Passwords do not match"); return; }
+    if (password !== confirm) { setError("Passwords don't match"); return; }
     if (password.length < 6) { setError("Password must be at least 6 characters"); return; }
     setLoading(true);
     try {
@@ -31,141 +29,140 @@ export default function RegisterPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password }),
       });
-      const data = await res.json();
       if (res.ok) {
         setSuccess(true);
         setTimeout(() => { router.push("/"); router.refresh(); }, 1500);
-      } else {
-        setError(data.error || "Registration failed");
-      }
-    } catch {
-      setError("An error occurred. Please try again.");
-    } finally {
-      setLoading(false);
-    }
+      } else setError((await res.json()).error || "Registration failed");
+    } catch { setError("Something went wrong. Try again."); }
+    finally { setLoading(false); }
   };
 
   const strength = password.length === 0 ? 0 : password.length < 6 ? 1 : password.length < 10 ? 2 : 3;
+  const strengthColor = ["", "bg-red-500", "bg-amber-400", "bg-emerald-500"][strength];
   const strengthLabel = ["", "Weak", "Good", "Strong"][strength];
-  const strengthColor = ["", "bg-red-500", "bg-amber-500", "bg-emerald-500"][strength];
 
   return (
-    <div className="min-h-screen flex">
-      {/* Left panel */}
-      <div className="hidden lg:flex lg:w-1/2 xl:w-2/5 relative bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 flex-col justify-between p-12 overflow-hidden">
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-32 -right-32 h-96 w-96 rounded-full bg-purple-500/20 blur-3xl" />
-          <div className="absolute bottom-0 -left-20 h-80 w-80 rounded-full bg-primary/15 blur-3xl" />
-        </div>
-        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")" }} />
-
-        <div className="relative">
-          <Link href="/" className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/30">
-              <BarChart3 className="h-5 w-5 text-primary-foreground" />
+    <div className="min-h-screen grid lg:grid-cols-[480px_1fr] xl:grid-cols-[520px_1fr]">
+      {/* ── Left — Form ── */}
+      <div className="flex items-center justify-center px-6 py-12 bg-background order-2 lg:order-1">
+        <div className="w-full max-w-[360px] space-y-8">
+          <div className="lg:hidden flex items-center gap-2.5">
+            <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
+              <BarChart3 className="h-4 w-4 text-primary-foreground" />
             </div>
-            <div>
-              <div className="font-bold text-white text-lg leading-none">SEO Audit Pro</div>
-              <div className="text-[11px] text-white/40 font-medium mt-0.5">Enterprise Platform</div>
+            <span className="font-bold text-[15px]">SEO Audit Pro</span>
+          </div>
+
+          <div>
+            <h1 className="text-[26px] font-extrabold tracking-tight">Create your account</h1>
+            <p className="text-muted-foreground text-[13px] mt-1.5">Free forever · No credit card needed</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <div className="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-destructive/8 border border-destructive/20 text-[13px] text-destructive">
+                <AlertCircle className="h-4 w-4 shrink-0" />{error}
+              </div>
+            )}
+            {success && (
+              <div className="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-emerald-500/8 border border-emerald-500/20 text-[13px] text-emerald-700 dark:text-emerald-400">
+                <CheckCircle className="h-4 w-4 shrink-0" />Account created! Redirecting…
+              </div>
+            )}
+
+            <div className="space-y-1.5">
+              <Label className="text-[13px] font-semibold">Name <span className="text-muted-foreground font-normal">(optional)</span></Label>
+              <Input placeholder="Jane Smith" value={name} onChange={(e) => setName(e.target.value)}
+                className="h-11 text-[13px] rounded-xl border-border/80 focus-visible:ring-primary/30" />
             </div>
-          </Link>
+
+            <div className="space-y-1.5">
+              <Label className="text-[13px] font-semibold">Email</Label>
+              <Input type="email" placeholder="you@company.com" value={email} onChange={(e) => setEmail(e.target.value)}
+                className="h-11 text-[13px] rounded-xl border-border/80 focus-visible:ring-primary/30" required />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-[13px] font-semibold">Password</Label>
+              <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
+                className="h-11 text-[13px] rounded-xl border-border/80 focus-visible:ring-primary/30" required />
+              {password.length > 0 && (
+                <div className="space-y-1 pt-0.5">
+                  <div className="flex gap-1">
+                    {[1, 2, 3].map((s) => (
+                      <div key={s} className={`h-1 flex-1 rounded-full transition-colors duration-300 ${strength >= s ? strengthColor : "bg-muted"}`} />
+                    ))}
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">{strengthLabel} password</p>
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-[13px] font-semibold">Confirm password</Label>
+              <Input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)}
+                className={`h-11 text-[13px] rounded-xl border-border/80 focus-visible:ring-primary/30 ${confirm && confirm !== password ? "border-destructive/50" : ""}`} required />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading || success}
+              className="w-full h-11 rounded-xl bg-primary text-primary-foreground font-semibold text-[14px] flex items-center justify-center gap-2 hover:bg-primary/90 transition-all shadow-sm shadow-primary/20 disabled:opacity-60 disabled:cursor-not-allowed mt-2"
+            >
+              {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+              {loading ? "Creating account…" : "Create account"}
+            </button>
+          </form>
+
+          <p className="text-center text-[13px] text-muted-foreground">
+            Already have an account?{" "}
+            <Link href="/login" className="font-semibold text-primary hover:underline">Sign in</Link>
+          </p>
+        </div>
+      </div>
+
+      {/* ── Right — Brand panel ── */}
+      <div className="hidden lg:flex flex-col justify-between relative overflow-hidden bg-[oklch(0.10_0.02_264)] p-12 order-1 lg:order-2">
+        <div className="absolute top-[-20%] right-[-10%] h-[500px] w-[500px] rounded-full bg-violet-500/20 blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-[-10%] left-[-5%]  h-[400px] w-[400px] rounded-full bg-primary/15 blur-[100px] pointer-events-none" />
+        <div className="absolute inset-0 opacity-[0.06]" style={{ backgroundImage: "radial-gradient(circle, oklch(1 0 0 / 50%) 1px, transparent 1px)", backgroundSize: "24px 24px" }} />
+
+        <div className="relative flex items-center gap-3">
+          <div className="h-9 w-9 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/30">
+            <BarChart3 className="h-[18px] w-[18px] text-white" />
+          </div>
+          <div>
+            <p className="font-bold text-white text-[15px] leading-none">SEO Audit Pro</p>
+            <p className="text-[10px] text-white/35 mt-0.5">Enterprise Platform</p>
+          </div>
         </div>
 
-        <div className="relative space-y-6">
-          <h2 className="text-4xl font-bold text-white leading-tight">
-            Start for free.<br />Scale when ready.
-          </h2>
-          <div className="space-y-4">
+        <div className="relative space-y-8 max-w-md">
+          <div>
+            <h2 className="text-4xl font-extrabold text-white leading-tight tracking-tight mb-4">
+              Start free.<br />Scale when ready.
+            </h2>
+            <p className="text-white/55 text-[15px] leading-relaxed">
+              Everything you need to rank higher — crawling, auditing, AI writing, and team tools. Forever free.
+            </p>
+          </div>
+          <div className="space-y-3">
             {[
-              { icon: Sparkles, text: "AI content generation with GSC signals" },
-              { icon: Shield, text: "Technical audits with 9 specialized analyzers" },
-              { icon: Users, text: "Team collaboration and property assignments" },
+              { icon: Sparkles, text: "AI article generation with GSC signals" },
+              { icon: Shield,   text: "9-analyzer technical audits" },
+              { icon: Users,    text: "Team collaboration & property assignments" },
             ].map(({ icon: Icon, text }) => (
               <div key={text} className="flex items-center gap-3">
-                <div className="h-8 w-8 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
-                  <Icon className="h-4 w-4 text-white/70" />
+                <div className="h-8 w-8 rounded-lg bg-white/8 flex items-center justify-center shrink-0">
+                  <Icon className="h-4 w-4 text-primary" />
                 </div>
-                <p className="text-white/65 text-sm">{text}</p>
+                <p className="text-white/60 text-[13px]">{text}</p>
               </div>
             ))}
           </div>
         </div>
 
-        <p className="relative text-white/25 text-xs">Built by KuyaMecky · Open Source</p>
-      </div>
-
-      {/* Right panel — form */}
-      <div className="flex-1 flex items-center justify-center px-6 py-12 bg-background">
-        <div className="w-full max-w-sm space-y-8">
-          <div>
-            <div className="lg:hidden mb-8">
-              <Link href="/" className="flex items-center gap-2.5">
-                <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-                  <BarChart3 className="h-4 w-4 text-primary-foreground" />
-                </div>
-                <span className="font-bold text-base">SEO Audit Pro</span>
-              </Link>
-            </div>
-            <h1 className="text-2xl font-bold tracking-tight">Create your account</h1>
-            <p className="text-muted-foreground text-sm mt-1.5">Free forever · No credit card required</p>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <Alert variant="destructive" className="py-3">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-            {success && (
-              <Alert className="py-3 border-emerald-500/30 bg-emerald-500/10">
-                <CheckCircle className="h-4 w-4 text-emerald-500" />
-                <AlertDescription className="text-emerald-700 dark:text-emerald-400">
-                  Account created! Redirecting…
-                </AlertDescription>
-              </Alert>
-            )}
-
-            <div className="space-y-2">
-              <Label htmlFor="name" className="text-sm font-medium">Full name <span className="text-muted-foreground font-normal">(optional)</span></Label>
-              <Input id="name" type="text" placeholder="Jane Smith" value={name} onChange={(e) => setName(e.target.value)} className="h-11" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-sm font-medium">Email address</Label>
-              <Input id="email" type="email" placeholder="you@company.com" value={email} onChange={(e) => setEmail(e.target.value)} className="h-11" required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-sm font-medium">Password</Label>
-              <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="h-11" required />
-              {password.length > 0 && (
-                <div className="space-y-1">
-                  <div className="flex gap-1">
-                    {[1, 2, 3].map((s) => (
-                      <div key={s} className={`h-1 flex-1 rounded-full transition-colors ${strength >= s ? strengthColor : "bg-muted"}`} />
-                    ))}
-                  </div>
-                  <p className="text-xs text-muted-foreground">{strengthLabel}</p>
-                </div>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword" className="text-sm font-medium">Confirm password</Label>
-              <Input id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="h-11" required />
-            </div>
-
-            <Button type="submit" className="w-full h-11 font-semibold mt-2" disabled={loading || success}>
-              {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              {loading ? "Creating account…" : "Create account"}
-            </Button>
-          </form>
-
-          <p className="text-center text-sm text-muted-foreground">
-            Already have an account?{" "}
-            <Link href="/login" className="font-semibold text-primary hover:underline">
-              Sign in
-            </Link>
-          </p>
-        </div>
+        <p className="relative text-white/20 text-[11px]">Built by KuyaMecky · Open Source</p>
       </div>
     </div>
   );
