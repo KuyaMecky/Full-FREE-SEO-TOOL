@@ -30,6 +30,7 @@ model User {
   cwvHistory       CwvHistory[]
   notifications    Notification[]
   alertRules       AlertRule[]
+  apiKeys          ApiKey[]
 }
 
 model GoogleAccount {
@@ -449,4 +450,18 @@ model ContentDraft {
   property         GscProperty          @relation(fields: [propertyId], references: [id])
   cluster          ContentCluster?      @relation(fields: [clusterId], references: [id])
   wpConnection     WordPressConnection? @relation(fields: [wpConnectionId], references: [id])
+}
+
+model ApiKey {
+  id          String    @id @default(cuid())
+  userId      String
+  name        String
+  prefix      String    @unique
+  keyHash     String    @unique
+  lastUsedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  revokedAt   DateTime?
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, prefix])
 }
