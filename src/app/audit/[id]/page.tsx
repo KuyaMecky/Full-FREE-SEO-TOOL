@@ -16,6 +16,7 @@ import { ActionItems } from "@/components/audit/action-items";
 import { PerformanceTab } from "@/components/audit/performance-tab";
 import { KeywordsTab } from "@/components/audit/keywords-tab";
 import { CompetitorsTab } from "@/components/audit/competitors-tab";
+import { SuggestionsTab } from "@/components/audit/suggestions-tab";
 import { FileText, RefreshCw, AlertCircle } from "lucide-react";
 
 interface AuditData {
@@ -185,12 +186,13 @@ export default function AuditDashboardPage() {
           </div>
 
           <Tabs defaultValue="summary" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-7">
+            <TabsList className="grid w-full grid-cols-8">
               <TabsTrigger value="summary">Summary</TabsTrigger>
               <TabsTrigger value="findings">Findings ({audit.findings.length})</TabsTrigger>
               <TabsTrigger value="performance">Performance</TabsTrigger>
               <TabsTrigger value="keywords">Keywords</TabsTrigger>
               <TabsTrigger value="competitors">Competitors</TabsTrigger>
+              <TabsTrigger value="suggestions">Suggestions</TabsTrigger>
               <TabsTrigger value="roadmap">Roadmap</TabsTrigger>
               <TabsTrigger value="actions">Actions</TabsTrigger>
             </TabsList>
@@ -224,6 +226,10 @@ export default function AuditDashboardPage() {
 
             <TabsContent value="competitors">
               <CompetitorsTab auditId={audit.id} />
+            </TabsContent>
+
+            <TabsContent value="suggestions">
+              <SuggestionsTab auditId={audit.id} />
             </TabsContent>
 
             <TabsContent value="roadmap">
