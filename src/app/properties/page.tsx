@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ConnectGoogleButton } from "@/components/properties/connect-google-button";
 import {
   Plus, AlertCircle, Globe, Eye, MousePointerClick,
-  TrendingUp, ArrowRight, CheckCircle, ExternalLink,
+  TrendingUp, ArrowRight, CheckCircle, ExternalLink, RotateCcw,
 } from "lucide-react";
 
 interface PropertyListItem {
@@ -52,20 +52,38 @@ function PropertiesPageInner() {
   const [hasGoogle, setHasGoogle] = useState<boolean | null>(null);
   const [googleConfigured, setGoogleConfigured] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchProperties = async () => {
+    try {
+      const [pr, ar, cr] = await Promise.all([
+        fetch("/api/gsc/properties"),
+        fetch("/api/gsc/sites"),
+        fetch("/api/settings/google"),
+      ]);
+      if (pr.ok) setProperties((await pr.json()).properties ?? []);
+      setHasGoogle(ar.ok);
+      if (cr.ok) setGoogleConfigured(Boolean((await cr.json()).configured));
+    } finally { setLoading(false); }
+  };
+
+  const handleRefreshAll = async () => {
+    if (!properties.length) return;
+    setRefreshing(true);
+    try {
+      await Promise.all(
+        properties.map(p =>
+          fetch(`/api/gsc/properties/${p.id}/refresh`, { method: "POST" })
+        )
+      );
+      await fetchProperties();
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   useEffect(() => {
-    (async () => {
-      try {
-        const [pr, ar, cr] = await Promise.all([
-          fetch("/api/gsc/properties"),
-          fetch("/api/gsc/sites"),
-          fetch("/api/settings/google"),
-        ]);
-        if (pr.ok) setProperties((await pr.json()).properties ?? []);
-        setHasGoogle(ar.ok);
-        if (cr.ok) setGoogleConfigured(Boolean((await cr.json()).configured));
-      } finally { setLoading(false); }
-    })();
+    fetchProperties();
   }, []);
 
   if (loading) return <PageSkeleton />;
@@ -81,12 +99,24 @@ function PropertiesPageInner() {
           </p>
         </div>
         {hasGoogle && (
-          <Link href="/properties/connect">
-            <button className="inline-flex items-center gap-1.5 text-[13px] font-semibold px-4 py-2 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm shadow-primary/20">
-              <Plus className="h-3.5 w-3.5" />
-              Add property
-            </button>
-          </Link>
+          <div className="flex items-center gap-2">
+            {properties.length > 0 && (
+              <button
+                onClick={handleRefreshAll}
+                disabled={refreshing}
+                className="inline-flex items-center gap-1.5 text-[13px] font-semibold px-4 py-2 rounded-xl bg-muted text-foreground hover:bg-muted/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <RotateCcw className={`h-3.5 w-3.5 ${refreshing ? "animate-spin" : ""}`} />
+                {refreshing ? "Refreshing..." : "Refresh"}
+              </button>
+            )}
+            <Link href="/properties/connect">
+              <button className="inline-flex items-center gap-1.5 text-[13px] font-semibold px-4 py-2 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm shadow-primary/20">
+                <Plus className="h-3.5 w-3.5" />
+                Add property
+              </button>
+            </Link>
+          </div>
         )}
       </div>
 
