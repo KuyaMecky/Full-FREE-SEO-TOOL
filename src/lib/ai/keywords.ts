@@ -94,7 +94,7 @@ Produce 5-8 primaryTargets, 8-12 longTailOpportunities, 3-5 clusters, up to 5 qu
   const text = await generateText({
     system: systemPrompt,
     user: userPrompt,
-    maxTokens: 2000,
+    maxTokens: 1400,
   });
 
   const cleaned = text

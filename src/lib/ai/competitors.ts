@@ -202,7 +202,7 @@ Give up to 4 strengths/weaknesses/themes/differentiators per competitor. Provide
   const text = await generateText({
     system: systemPrompt,
     user: userPrompt,
-    maxTokens: 2000,
+    maxTokens: 1400,
   });
 
   const cleaned = text

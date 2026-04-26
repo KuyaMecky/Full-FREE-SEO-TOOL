@@ -67,7 +67,7 @@ Return JSON with this exact shape:
   ]
 }`;
 
-  const raw = await generateText({ system, user, maxTokens: 2000, temperature: 0.7 });
+  const raw = await generateText({ system, user, maxTokens: 1400, temperature: 0.7 });
 
   const jsonMatch = raw.match(/\{[\s\S]*\}/);
   if (!jsonMatch) throw new Error("AI did not return valid JSON");

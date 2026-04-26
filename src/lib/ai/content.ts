@@ -173,7 +173,7 @@ Return ONLY the JSON object.`;
   const text = await generateText({
     system: systemPrompt,
     user: userPrompt,
-    maxTokens: 2000,
+    maxTokens: 1400,
   });
   const cleaned = text
     .replace(/^\s*```(?:json)?\s*/i, "")
@@ -274,7 +274,7 @@ Produce 3-6 items in each array section. Return ONLY the JSON object.`;
   const text = await generateText({
     system: systemPrompt,
     user: userPrompt,
-    maxTokens: 2000,
+    maxTokens: 1400,
   });
   const cleaned = text
     .replace(/^\s*```(?:json)?\s*/i, "")
