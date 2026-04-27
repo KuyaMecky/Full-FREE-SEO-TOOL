@@ -106,8 +106,9 @@ Complete documentation for SEO Audit Pro features, components, and deployment.
 - **Content Generation**: AI-powered article creation and scheduling
 - **Team Collaboration**: User roles, property assignments, shared reports
 - **Real-time Analytics**: GSC data, Core Web Vitals, ranking tracking
+- **Real-time Crawl Progress**: Live SSE streaming of audit crawl metrics
 
-### 🎯 UI Components (13 New!)
+### 🎯 UI Components (14 New!)
 
 - **API Status Indicators**: Show integration configuration status
 - **Terminal Loaders**: Active loading with typewriter effect and animations
@@ -129,10 +130,10 @@ Complete documentation for SEO Audit Pro features, components, and deployment.
 
 ### Demo Pages
 
+- **API Status**: Check `/settings` for integration configuration
 - **Basic Loaders**: http://localhost:3000/demo/loaders
 - **Advanced Loaders**: http://localhost:3000/demo/advanced-loaders
-- **Settings**: http://localhost:3000/settings (see API status)
-- **Automation**: http://localhost:3000/automation (n8n interface)
+- **Live Crawl Progress**: View on any audit creation form
 
 ### Endpoints
 
@@ -144,6 +145,7 @@ Complete documentation for SEO Audit Pro features, components, and deployment.
 ### Files by Category
 
 **UI Components**:
+- `src/app/components/crawl-progress-live.tsx` (real-time crawl progress)
 - `src/app/components/api-status-indicator.tsx` (API status)
 - `src/app/components/terminal-loader.tsx` (basic loaders)
 - `src/app/components/terminal-advanced.tsx` (advanced effects)
@@ -217,18 +219,25 @@ Complete documentation for SEO Audit Pro features, components, and deployment.
 ### April 27, 2026
 
 **Added Components**:
+- **CrawlProgressLive**: Real-time crawl progress with SSE streaming
 - API Status Indicator with 3 variants
 - Terminal Loaders (basic and advanced)
 - Status Indicators (badges, progress, pulsing)
 - Progress components (circular, linear, step)
 - Skeleton loaders with animations
 
+**Features**:
+- Real-time crawl metrics (pages crawled/total, current URL, error tracking)
+- Server-Sent Events integration for live progress updates
+- Connection loss detection and alerts
+- Dynamic color theming based on crawl status
+
 **New Demo Pages**:
 - `/demo/loaders` - Basic loaders showcase
 - `/demo/advanced-loaders` - Advanced components with effects
 
 **Documentation**:
-- Complete Components Guide
+- Complete Components Guide with CrawlProgressLive docs
 - Quick Reference for fast lookup
 - Updated deployment documentation
 
@@ -263,9 +272,9 @@ Complete documentation for SEO Audit Pro features, components, and deployment.
 ## Version Information
 
 - **App Version**: 1.0
-- **Documentation Version**: 1.0
+- **Documentation Version**: 1.1
 - **Last Updated**: April 27, 2026
-- **Components**: 13 main components
+- **Components**: 14 main components (including real-time crawl progress)
 - **Demo Pages**: 2 comprehensive showcases
 - **Documentation Files**: 12 guides
 

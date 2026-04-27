@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { X, Plus } from "lucide-react";
-import { TerminalLoader } from "@/app/components/terminal-loader";
+import { CrawlProgressLive } from "@/app/components/crawl-progress-live";
 
 const BUSINESS_TYPES = [
   "E-commerce",
@@ -43,6 +43,7 @@ export function AuditInputForm() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [auditId, setAuditId] = useState<string | null>(null);
 
   const [domain, setDomain] = useState("");
   const [country, setCountry] = useState("US");
@@ -99,10 +100,9 @@ export function AuditInputForm() {
       }
 
       const data = await res.json();
-      router.push(`/audit/${data.id}`);
+      setAuditId(data.id);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
-    } finally {
       setLoading(false);
     }
   };
@@ -273,11 +273,14 @@ export function AuditInputForm() {
         </div>
       )}
 
-      {loading && (
-        <TerminalLoader
-          message="Initializing audit..."
-          subtitle="Starting domain crawl and analysis"
-          variant="full"
+      {auditId && (
+        <CrawlProgressLive
+          auditId={auditId}
+          onComplete={(status) => {
+            if (status === 'complete') {
+              router.push(`/audit/${auditId}`);
+            }
+          }}
         />
       )}
 

@@ -4,11 +4,126 @@ Complete documentation for all UI components in SEO Audit Pro.
 
 ## Table of Contents
 
-1. [API Status Indicators](#api-status-indicators)
-2. [Terminal Loaders](#terminal-loaders)
-3. [Advanced Terminal Components](#advanced-terminal-components)
-4. [Status Indicators & Progress](#status-indicators--progress)
-5. [Usage Examples](#usage-examples)
+1. [Crawl Progress Live](#crawl-progress-live)
+2. [API Status Indicators](#api-status-indicators)
+3. [Terminal Loaders](#terminal-loaders)
+4. [Advanced Terminal Components](#advanced-terminal-components)
+5. [Status Indicators & Progress](#status-indicators--progress)
+6. [Usage Examples](#usage-examples)
+
+---
+
+## Crawl Progress Live
+
+### Overview
+
+Real-time crawl progress display that streams live updates via Server-Sent Events (SSE). Shows actual website crawl metrics as pages are scanned, including pages crawled, current URL, error count, and progress percentage.
+
+**Location**: `src/app/components/crawl-progress-live.tsx`
+
+### Features
+
+- Server-Sent Events (SSE) streaming for real-time updates
+- Displays crawled pages / total pages
+- Shows current page URL being crawled
+- Error tracking with up to 3 errors displayed
+- Progress percentage calculation
+- Status indicators (crawling, analyzing, complete, error)
+- Connection loss detection and reconnection alerts
+- Advanced terminal display with dynamic colors
+
+### Usage
+
+```tsx
+import { CrawlProgressLive } from '@/app/components/crawl-progress-live';
+
+<CrawlProgressLive
+  auditId="audit-123"
+  onComplete={(status) => {
+    if (status === 'complete') {
+      console.log('Crawl finished successfully');
+    }
+  }}
+/>
+```
+
+### Props
+
+```typescript
+interface CrawlProgressLiveProps {
+  auditId: string;
+  onComplete?: (status: string) => void;
+}
+```
+
+### Data Structure
+
+The component receives data from `/api/crawl/progress?auditId={auditId}`:
+
+```typescript
+interface CrawlProgress {
+  totalPages: number;
+  crawledPages: number;
+  currentUrl: string;
+  status: 'crawling' | 'analyzing' | 'complete' | 'error';
+  errors: string[];
+}
+```
+
+### Status Colors
+
+- **Crawling/Analyzing**: Cyan - active processing
+- **Complete**: Green - success state
+- **Error**: Red - failure state
+
+### Features Displayed
+
+1. **Advanced Terminal** - Dynamic typewriter effect with color theming
+2. **Linear Progress Bar** - Visual progress percentage
+3. **Progress Details** - Grid showing pages crawled, percentage, errors
+4. **Status Badge** - Current operation status
+5. **Connection Monitor** - Shows connection loss alerts if SSE disconnects
+
+### Integration in Audit Form
+
+In the audit form (`src/components/audit/input-form.tsx`):
+
+```tsx
+const [auditId, setAuditId] = useState<string | null>(null);
+
+const handleSubmit = async (e) => {
+  // ... create audit ...
+  const data = await res.json();
+  setAuditId(data.id); // Triggers CrawlProgressLive to show
+};
+
+return (
+  <>
+    {auditId && (
+      <CrawlProgressLive
+        auditId={auditId}
+        onComplete={(status) => {
+          if (status === 'complete') {
+            router.push(`/audit/${auditId}`);
+          }
+        }}
+      />
+    )}
+  </>
+);
+```
+
+### Backend Integration
+
+The component requires the SSE endpoint at `/api/crawl/progress`:
+
+```typescript
+// Endpoint should:
+// 1. Accept auditId query parameter
+// 2. Stream CrawlProgress updates via SSE
+// 3. Update every 1000ms
+// 4. Close stream when crawl completes
+```
 
 ---
 

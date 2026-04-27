@@ -2,6 +2,21 @@
 
 Fast lookup for all UI components.
 
+## Crawl Progress Live
+
+### CrawlProgressLive
+```tsx
+<CrawlProgressLive
+  auditId="audit-123"
+  onComplete={(status) => {
+    if (status === 'complete') navigate('/audit/123');
+  }}
+/>
+```
+✅ Real-time progress, SSE streaming, error tracking
+
+---
+
 ## Terminal Loaders
 
 ### TerminalLoader
@@ -149,6 +164,9 @@ Fast lookup for all UI components.
 ## Imports
 
 ```typescript
+// Crawl Progress
+import { CrawlProgressLive } from '@/app/components/crawl-progress-live';
+
 // Terminal Loaders
 import {
   TerminalLoader,
