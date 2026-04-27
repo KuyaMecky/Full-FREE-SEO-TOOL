@@ -20,7 +20,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ report, shareLink: null });
     } else {
       const report = await generateShareableLink(auditId, session.id);
-      const shareLink = `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/share/audit/${report.shareSlug}`;
+      // Get base URL from request headers
+      const protocol = request.headers.get("x-forwarded-proto") || "http";
+      const host = request.headers.get("x-forwarded-host") || request.headers.get("host") || "localhost:3000";
+      const baseUrl = `${protocol}://${host}`;
+      const shareLink = `${baseUrl}/share/audit/${report.shareSlug}`;
       return NextResponse.json({ report, shareLink });
     }
   } catch (err) {
