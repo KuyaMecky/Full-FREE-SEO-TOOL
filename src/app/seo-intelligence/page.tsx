@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { KeywordResearch } from '@/app/components/keyword-research';
 import { ContentAnalyzer } from '@/app/components/content-analyzer';
@@ -8,7 +8,7 @@ import { CompetitorAnalysis } from '@/app/components/competitor-analysis';
 import { RankTracker } from '@/app/components/rank-tracker';
 import { useSearchParams } from 'next/navigation';
 
-export default function SEOIntelligencePage() {
+function SEOIntelligenceContent() {
   const searchParams = useSearchParams();
   const auditId = searchParams.get('auditId') || '';
   const domain = searchParams.get('domain') || '';
@@ -16,9 +16,14 @@ export default function SEOIntelligencePage() {
     ? JSON.parse(decodeURIComponent(searchParams.get('competitors') || '[]'))
     : [];
 
+  return <SEOIntelligencePageContent auditId={auditId} domain={domain} competitors={competitors} />;
+}
+
+function SEOIntelligencePageContent({ auditId, domain, competitors }: { auditId: string; domain: string; competitors: string[] }) {
+
   const [activeTab, setActiveTab] = useState('keywords');
 
-  if (!auditId) {
+  if (!auditId || !domain) {
     return (
       <div className="min-h-screen bg-gray-950 text-gray-100 p-8">
         <div className="max-w-7xl mx-auto">
@@ -164,5 +169,22 @@ export default function SEOIntelligencePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SEOIntelligencePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-950 text-gray-100 p-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="animate-pulse space-y-6">
+            <div className="h-10 bg-gray-700 rounded w-1/3" />
+            <div className="h-96 bg-gray-700 rounded" />
+          </div>
+        </div>
+      </div>
+    }>
+      <SEOIntelligenceContent />
+    </Suspense>
   );
 }
