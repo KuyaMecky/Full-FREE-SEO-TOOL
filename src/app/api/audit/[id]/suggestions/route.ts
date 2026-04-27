@@ -10,6 +10,8 @@ export async function GET(
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+  console.log("Loading suggestions for audit:", params.id);
+
   const audit = await prisma.audit.findUnique({
     where: { id: params.id },
     include: {
@@ -18,7 +20,12 @@ export async function GET(
     },
   });
 
+  console.log("Audit found:", !!audit, "Status:", audit?.status);
+  console.log("Findings count:", audit?.findings?.length || 0);
+  console.log("CrawlResults count:", audit?.crawlResults?.length || 0);
+
   if (!audit || audit.userId !== session.id) {
+    console.log("Audit not found or unauthorized");
     return NextResponse.json({ error: "Audit not found" }, { status: 404 });
   }
 
@@ -40,47 +47,67 @@ export async function GET(
       .map((r: any) => r?.title || r?.h1)
       .filter(Boolean);
 
-    // Generate content ideas
-    try {
-      const ideas = await generateContentIdeas({
-        domain: audit.domain,
-        businessType: audit.businessType || "General",
-        seedTopics: seedTopics.length > 0 ? seedTopics : undefined,
-        existingUrls: existingUrls.length > 0 ? existingUrls : [""],
-      });
+    // Return suggestions based on audit findings
+    console.log("Returning suggestions based on findings:", quickWins.length);
 
-      return NextResponse.json({
-        suggestions: ideas.quickWinIdeas.slice(0, 5).map((idea, i) => ({
-          id: `suggestion-${i}`,
-          title: idea.title,
-          keyword: idea.targetKeyword,
-          difficulty: idea.difficulty,
-          intent: idea.intent,
-          outline: idea.outline,
-          rationale: idea.rationale,
-          wordCount: idea.estimatedWordCount,
-          slug: idea.suggestedSlug,
-          linkedQuickWin: quickWins[i]?.issue || null,
-        })),
-      });
-    } catch (aiError) {
-      console.error("AI content generation failed:", aiError);
-      // Return fallback suggestions based on findings
-      return NextResponse.json({
-        suggestions: quickWins.slice(0, 5).map((finding, i) => ({
-          id: `suggestion-${i}`,
-          title: `Fix: ${finding.issue}`,
-          keyword: finding.issue.toLowerCase(),
-          difficulty: "medium",
-          intent: "informational",
-          outline: ["Overview", "Solution", "Implementation"],
-          rationale: `Address this finding: ${finding.description}`,
-          wordCount: 1500,
-          slug: finding.issue.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
-          linkedQuickWin: finding.issue,
-        })),
-      });
-    }
+    // Create default suggestions if no findings
+    const defaultSuggestions = [
+      {
+        id: "suggestion-1",
+        title: "Create Content for High-Intent Keywords",
+        keyword: "target keywords",
+        difficulty: "medium",
+        intent: "commercial",
+        outline: ["Research", "Strategy", "Implementation"],
+        rationale: "Target keywords with commercial intent to drive conversions",
+        wordCount: 2000,
+        slug: "create-content-high-intent-keywords",
+        linkedQuickWin: null,
+      },
+      {
+        id: "suggestion-2",
+        title: "Optimize Existing Top Pages",
+        keyword: "page optimization",
+        difficulty: "low",
+        intent: "informational",
+        outline: ["Analysis", "Optimization", "Monitoring"],
+        rationale: "Your top-performing pages have room for improvement",
+        wordCount: 1500,
+        slug: "optimize-existing-top-pages",
+        linkedQuickWin: null,
+      },
+      {
+        id: "suggestion-3",
+        title: "Address Content Gaps",
+        keyword: "content gaps",
+        difficulty: "high",
+        intent: "informational",
+        outline: ["Gap Analysis", "Content Planning", "Implementation"],
+        rationale: "Fill missing content opportunities identified in the audit",
+        wordCount: 2500,
+        slug: "address-content-gaps",
+        linkedQuickWin: null,
+      },
+    ];
+
+    // If we have findings, create suggestions from them
+    const findingsSuggestions = quickWins.slice(0, 3).map((finding, i) => ({
+      id: `suggestion-finding-${i}`,
+      title: `Fix: ${finding.issue}`,
+      keyword: finding.issue.toLowerCase(),
+      difficulty: "medium" as const,
+      intent: "informational" as const,
+      outline: ["Overview", "Problem Analysis", "Solution"],
+      rationale: `Address this finding: ${finding.description || ""}`,
+      wordCount: 1200,
+      slug: finding.issue.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+      linkedQuickWin: finding.issue,
+    }));
+
+    const suggestions = findingsSuggestions.length > 0 ? findingsSuggestions : defaultSuggestions;
+
+    console.log("Returning", suggestions.length, "suggestions");
+    return NextResponse.json({ suggestions });
   } catch (error) {
     console.error("Failed to load suggestions:", error);
     // Always return a response with at least basic suggestions
