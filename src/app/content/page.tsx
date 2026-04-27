@@ -144,9 +144,10 @@ export default function ContentPage() {
       <HelpBanner guideKey="content" guide={GUIDES.content} />
 
       <Tabs defaultValue="generate">
-        <TabsList className="grid grid-cols-2 w-full">
+        <TabsList className="grid grid-cols-3 w-full">
           <TabsTrigger value="generate">Generate new</TabsTrigger>
           <TabsTrigger value="recreate">Recreate existing</TabsTrigger>
+          <TabsTrigger value="automation">Automation</TabsTrigger>
         </TabsList>
 
         <TabsContent value="generate" className="mt-6">
@@ -160,6 +161,13 @@ export default function ContentPage() {
 
         <TabsContent value="recreate" className="mt-6">
           <RecreateTab
+            properties={properties}
+            defaultPropertyId={propertyId}
+          />
+        </TabsContent>
+
+        <TabsContent value="automation" className="mt-6">
+          <AutomationTab
             properties={properties}
             defaultPropertyId={propertyId}
           />
@@ -809,6 +817,422 @@ function RecreateTab({
             </Card>
           )}
         </>
+      )}
+    </div>
+  );
+}
+
+// ─── Automation Tab ───────────────────────────────────────
+
+function AutomationTab({
+  properties,
+  defaultPropertyId,
+}: {
+  properties: Property[];
+  defaultPropertyId: string;
+}) {
+  const [propertyId, setPropertyId] = useState(defaultPropertyId);
+  const [automation, setAutomation] = useState<any>(null);
+  const [status, setStatus] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [running, setRunning] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  const [config, setConfig] = useState({
+    enabled: true,
+    autoGenerateIdeas: true,
+    autoDraftIdeas: true,
+    autoWriteContent: true,
+    autoSchedulePublish: false,
+    maxDraftsPerRun: 5,
+    businessType: "",
+    seedTopics: [] as string[],
+    scheduleAfterDays: 7,
+  });
+
+  const [wpConnections, setWpConnections] = useState<any[]>([]);
+  const [seedInput, setSeedInput] = useState("");
+
+  useEffect(() => {
+    loadAutomation();
+    loadWpConnections();
+  }, [propertyId]);
+
+  const loadAutomation = async () => {
+    if (!propertyId) return;
+    try {
+      setLoading(true);
+      const res = await fetch(`/api/automation/config?propertyId=${propertyId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setAutomation(data.automation);
+        setConfig({
+          enabled: data.automation?.enabled ?? true,
+          autoGenerateIdeas: data.automation?.autoGenerateIdeas ?? true,
+          autoDraftIdeas: data.automation?.autoDraftIdeas ?? true,
+          autoWriteContent: data.automation?.autoWriteContent ?? true,
+          autoSchedulePublish: data.automation?.autoSchedulePublish ?? false,
+          maxDraftsPerRun: data.automation?.maxDraftsPerRun ?? 5,
+          businessType: data.automation?.businessType ?? "",
+          seedTopics: JSON.parse(data.automation?.seedTopics ?? "[]"),
+          scheduleAfterDays: data.automation?.scheduleAfterDays ?? 7,
+        });
+      }
+      loadStatus();
+    } catch (err) {
+      setError("Failed to load automation config");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadStatus = async () => {
+    if (!automation?.id) return;
+    try {
+      const res = await fetch(`/api/automation/status?automationId=${automation.id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setStatus(data);
+      }
+    } catch (err) {
+      // Ignore
+    }
+  };
+
+  const loadWpConnections = async () => {
+    try {
+      const res = await fetch("/api/wordpress/connections");
+      if (res.ok) {
+        const data = await res.json();
+        setWpConnections(data.connections || []);
+      }
+    } catch (err) {
+      // Ignore
+    }
+  };
+
+  const saveConfig = async () => {
+    try {
+      setLoading(true);
+      setError("");
+      setSuccess("");
+
+      const res = await fetch("/api/automation/config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ propertyId, ...config }),
+      });
+
+      if (!res.ok) throw new Error("Failed to save");
+      const data = await res.json();
+      setAutomation(data.automation);
+      setSuccess("Configuration saved successfully");
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const runNow = async () => {
+    if (!automation) return;
+    try {
+      setRunning(true);
+      setError("");
+
+      const res = await fetch("/api/automation/run", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ automationId: automation.id }),
+      });
+
+      if (!res.ok) throw new Error("Failed to run");
+      const data = await res.json();
+      setSuccess(`Generated ${data.result.itemsProcessed} items`);
+      loadStatus();
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to run");
+    } finally {
+      setRunning(false);
+    }
+  };
+
+  const addSeedTopic = () => {
+    const topic = seedInput.trim();
+    if (topic && !config.seedTopics.includes(topic)) {
+      setConfig({
+        ...config,
+        seedTopics: [...config.seedTopics, topic],
+      });
+      setSeedInput("");
+    }
+  };
+
+  const removeSeedTopic = (topic: string) => {
+    setConfig({
+      ...config,
+      seedTopics: config.seedTopics.filter((t) => t !== topic),
+    });
+  };
+
+  return (
+    <div className="space-y-6">
+      {error && <Alert className="border-red-500/50 bg-red-500/10"><AlertCircle className="w-4 h-4" /><AlertDescription>{error}</AlertDescription></Alert>}
+      {success && <Alert className="border-green-500/50 bg-green-500/10"><AlertDescription className="text-green-700 dark:text-green-400">{success}</AlertDescription></Alert>}
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Sparkles className="w-5 h-5" />
+            Automation Settings
+          </CardTitle>
+          <CardDescription>
+            Configure automatic content generation, drafting, and publishing
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Property Selection */}
+          <div className="space-y-2">
+            <Label>Website</Label>
+            <select
+              className="w-full border border-border rounded-md px-3 py-2"
+              value={propertyId}
+              onChange={(e) => setPropertyId(e.target.value)}
+              disabled={loading}
+            >
+              {properties.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.siteUrl}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Master Enable/Disable */}
+          <div className="flex items-center justify-between p-4 border border-border rounded-lg bg-muted/50">
+            <div>
+              <div className="font-medium">Enable Automation</div>
+              <div className="text-sm text-muted-foreground">
+                Turn on to start auto-generating content
+              </div>
+            </div>
+            <input
+              type="checkbox"
+              checked={config.enabled}
+              onChange={(e) => setConfig({ ...config, enabled: e.target.checked })}
+              className="w-5 h-5"
+            />
+          </div>
+
+          {/* Steps */}
+          <div className="space-y-3">
+            <div className="font-medium">Automation Steps</div>
+            <label className="flex items-center gap-3 p-3 border border-border rounded-lg cursor-pointer hover:bg-muted/50">
+              <input
+                type="checkbox"
+                checked={config.autoGenerateIdeas}
+                onChange={(e) => setConfig({ ...config, autoGenerateIdeas: e.target.checked })}
+              />
+              <div>
+                <div className="font-sm font-medium">Generate Ideas</div>
+                <div className="text-xs text-muted-foreground">
+                  Generate content ideas from GSC data
+                </div>
+              </div>
+            </label>
+
+            <label className="flex items-center gap-3 p-3 border border-border rounded-lg cursor-pointer hover:bg-muted/50">
+              <input
+                type="checkbox"
+                checked={config.autoDraftIdeas}
+                onChange={(e) => setConfig({ ...config, autoDraftIdeas: e.target.checked })}
+              />
+              <div>
+                <div className="font-sm font-medium">Create Drafts</div>
+                <div className="text-xs text-muted-foreground">
+                  Auto-create drafts from generated ideas
+                </div>
+              </div>
+            </label>
+
+            <label className="flex items-center gap-3 p-3 border border-border rounded-lg cursor-pointer hover:bg-muted/50">
+              <input
+                type="checkbox"
+                checked={config.autoWriteContent}
+                onChange={(e) => setConfig({ ...config, autoWriteContent: e.target.checked })}
+              />
+              <div>
+                <div className="font-sm font-medium">Write Content</div>
+                <div className="text-xs text-muted-foreground">
+                  Auto-write full SEO-optimized articles
+                </div>
+              </div>
+            </label>
+
+            <label className="flex items-center gap-3 p-3 border border-border rounded-lg cursor-pointer hover:bg-muted/50">
+              <input
+                type="checkbox"
+                checked={config.autoSchedulePublish}
+                onChange={(e) => setConfig({ ...config, autoSchedulePublish: e.target.checked })}
+              />
+              <div>
+                <div className="font-sm font-medium">Schedule Publishing</div>
+                <div className="text-xs text-muted-foreground">
+                  Auto-schedule publishing to WordPress
+                </div>
+              </div>
+            </label>
+          </div>
+
+          {/* Settings */}
+          <div className="border-t pt-6 space-y-4">
+            <div>
+              <Label>Max drafts per run</Label>
+              <Input
+                type="number"
+                min="1"
+                max="20"
+                value={config.maxDraftsPerRun}
+                onChange={(e) =>
+                  setConfig({ ...config, maxDraftsPerRun: parseInt(e.target.value) || 5 })
+                }
+                className="mt-1"
+              />
+            </div>
+
+            <div>
+              <Label>Business Type (optional)</Label>
+              <Input
+                placeholder="e.g., SaaS, E-commerce, Blog"
+                value={config.businessType}
+                onChange={(e) => setConfig({ ...config, businessType: e.target.value })}
+                className="mt-1"
+              />
+            </div>
+
+            <div>
+              <Label>Seed Topics</Label>
+              <div className="flex gap-2 mt-1">
+                <Input
+                  placeholder="Add a topic..."
+                  value={seedInput}
+                  onChange={(e) => setSeedInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addSeedTopic())}
+                />
+                <Button onClick={addSeedTopic} size="sm" variant="outline">
+                  Add
+                </Button>
+              </div>
+              {config.seedTopics.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {config.seedTopics.map((topic) => (
+                    <Badge key={topic} variant="secondary" className="cursor-pointer">
+                      {topic}
+                      <X
+                        className="w-3 h-3 ml-1 hover:text-destructive"
+                        onClick={() => removeSeedTopic(topic)}
+                      />
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {config.autoSchedulePublish && (
+              <div>
+                <Label>Days to schedule publish</Label>
+                <Input
+                  type="number"
+                  min="1"
+                  max="90"
+                  value={config.scheduleAfterDays}
+                  onChange={(e) =>
+                    setConfig({ ...config, scheduleAfterDays: parseInt(e.target.value) || 7 })
+                  }
+                  className="mt-1"
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Save Button */}
+          <Button
+            onClick={saveConfig}
+            disabled={loading}
+            className="w-full"
+          >
+            {loading ? "Saving..." : "Save Configuration"}
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Status Card */}
+      {status && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="w-5 h-5" />
+              Automation Status
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-3 gap-4">
+              <div className="p-3 border border-border rounded-lg bg-muted/50">
+                <div className="text-2xl font-bold">{status.stats.totalIdeas}</div>
+                <div className="text-xs text-muted-foreground">Total Ideas</div>
+              </div>
+              <div className="p-3 border border-border rounded-lg bg-muted/50">
+                <div className="text-2xl font-bold">{status.stats.writtenIdeas}</div>
+                <div className="text-xs text-muted-foreground">Written</div>
+              </div>
+              <div className="p-3 border border-border rounded-lg bg-muted/50">
+                <div className="text-2xl font-bold">{status.stats.publishedIdeas}</div>
+                <div className="text-xs text-muted-foreground">Published</div>
+              </div>
+            </div>
+
+            {status.lastRuns.length > 0 && (
+              <div className="border-t pt-4">
+                <div className="font-medium mb-2">Recent Runs</div>
+                <div className="space-y-2">
+                  {status.lastRuns.slice(0, 5).map((run: any, i: number) => (
+                    <div
+                      key={i}
+                      className="flex items-center justify-between text-sm p-2 border border-border rounded bg-muted/30"
+                    >
+                      <div>
+                        <div className="font-medium">{run.runType}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {new Date(run.createdAt).toLocaleDateString()}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className={run.status === "success" ? "text-green-600" : "text-amber-600"}>
+                          {run.itemsProcessed} items
+                        </div>
+                        {run.itemsFailed > 0 && (
+                          <div className="text-xs text-red-600">{run.itemsFailed} failed</div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <Button
+              onClick={runNow}
+              disabled={running || !automation}
+              className="w-full"
+              variant="default"
+            >
+              {running ? "Running..." : "Run Now"}
+            </Button>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

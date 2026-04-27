@@ -31,6 +31,7 @@ model User {
   notifications    Notification[]
   alertRules       AlertRule[]
   apiKeys          ApiKey[]
+  contentAutomations ContentAutomation[]
 }
 
 model GoogleAccount {
@@ -65,6 +66,7 @@ model GscProperty {
   assignments        PropertyAssignment[]
   rankKeywords       RankKeyword[]
   pageSnapshots      PageSnapshot[]
+  contentAutomations ContentAutomation[]
 
   @@unique([googleAccountId, siteUrl])
   @@index([userId])
@@ -401,16 +403,17 @@ model PropertyAssignment {
 }
 
 model WordPressConnection {
-  id          String         @id @default(cuid())
+  id          String                  @id @default(cuid())
   userId      String
-  label       String         @default("My WordPress Site")
+  label       String                  @default("My WordPress Site")
   siteUrl     String
   username    String
   appPassword String
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
-  user        User           @relation(fields: [userId], references: [id])
+  createdAt   DateTime                @default(now())
+  updatedAt   DateTime                @updatedAt
+  user        User                    @relation(fields: [userId], references: [id])
   drafts      ContentDraft[]
+  automations ContentAutomation[]
 }
 
 model ContentCluster {
@@ -450,6 +453,7 @@ model ContentDraft {
   property         GscProperty          @relation(fields: [propertyId], references: [id])
   cluster          ContentCluster?      @relation(fields: [clusterId], references: [id])
   wpConnection     WordPressConnection? @relation(fields: [wpConnectionId], references: [id])
+  generatedIdeas   GeneratedContentIdea[] @relation("DraftIdeas")
 }
 
 model ApiKey {
@@ -464,4 +468,73 @@ model ApiKey {
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, prefix])
+}
+
+model ContentAutomation {
+  id                String                  @id @default(cuid())
+  userId            String
+  propertyId        String
+  enabled           Boolean                 @default(true)
+  autoGenerateIdeas Boolean                 @default(true)
+  autoDraftIdeas    Boolean                 @default(true)
+  autoWriteContent  Boolean                 @default(true)
+  autoSchedulePublish Boolean               @default(false)
+  maxDraftsPerRun   Int                     @default(5)
+  scheduledDayOfWeek Int?                   // 0=Sunday, 6=Saturday
+  scheduledHourUtc  Int?                    // 0-23
+  lastRunAt         DateTime?
+  nextRunAt         DateTime?
+  businessType      String                  @default("")
+  seedTopics        String                  @default("[]")
+  wpConnectionId    String?
+  scheduleAfterDays Int                     @default(7)
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+  user              User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  property          GscProperty             @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  wpConnection      WordPressConnection?    @relation(fields: [wpConnectionId], references: [id], onDelete: SetNull)
+  logs              AutomationLog[]
+  ideas             GeneratedContentIdea[]
+
+  @@unique([propertyId])
+  @@index([userId])
+}
+
+model GeneratedContentIdea {
+  id                String              @id @default(cuid())
+  automationId      String
+  title             String
+  targetKeyword     String
+  intent            String
+  difficulty        String
+  outline           String              @default("[]")
+  rationale         String
+  estimatedWordCount Int
+  suggestedSlug     String
+  internalLinkTargets String            @default("[]")
+  draftId           String?
+  status            String              @default("pending") // pending, draft_created, written, scheduled, published
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  automation        ContentAutomation   @relation(fields: [automationId], references: [id], onDelete: Cascade)
+  draft             ContentDraft?       @relation("DraftIdeas", fields: [draftId], references: [id], onDelete: SetNull)
+
+  @@index([automationId])
+  @@index([status])
+}
+
+model AutomationLog {
+  id                String              @id @default(cuid())
+  automationId      String
+  runType           String              // "ideas_generated", "drafts_created", "content_written", "publish_scheduled"
+  status            String              // "success", "partial", "failed"
+  itemsProcessed    Int                 @default(0)
+  itemsFailed       Int                 @default(0)
+  message           String              @default("")
+  errorDetails      String              @default("[]")
+  duration          Int                 @default(0)
+  createdAt         DateTime            @default(now())
+  automation        ContentAutomation   @relation(fields: [automationId], references: [id], onDelete: Cascade)
+
+  @@index([automationId, createdAt])
 }
