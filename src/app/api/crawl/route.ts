@@ -111,14 +111,23 @@ export async function POST(request: NextRequest) {
 
         // Trigger analysis
         try {
-          await fetch(
-            `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/analyze`,
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ auditId }),
-            }
-          );
+          const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
+          const host = process.env.VERCEL_URL || process.env.NEXT_PUBLIC_APP_URL || "localhost:3000";
+          const analysisUrl = `${protocol}://${host}/api/analyze`;
+
+          console.log("Triggering analysis at:", analysisUrl);
+
+          const analysisResponse = await fetch(analysisUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ auditId }),
+          });
+
+          if (!analysisResponse.ok) {
+            console.error("Analysis trigger failed:", analysisResponse.status, analysisResponse.statusText);
+          } else {
+            console.log("Analysis triggered successfully");
+          }
         } catch (err) {
           console.error("Failed to trigger analysis:", err);
         }
