@@ -218,8 +218,15 @@ model AuditReport {
   actionItems        String   @default("[]")
   stakeholderSummary String   @default("")
   devTaskList        String   @default("[]")
+  shareSlug          String?  @unique
+  isShared           Boolean  @default(false)
+  viewCount          Int      @default(0)
+  lastViewedAt       DateTime?
+  expiresAt          DateTime?
   createdAt          DateTime @default(now())
   audit              Audit    @relation(fields: [auditId], references: [id], onDelete: Cascade)
+
+  @@index([shareSlug])
 }
 
 model Settings {

@@ -17,7 +17,7 @@ import { PerformanceTab } from "@/components/audit/performance-tab";
 import { KeywordsTab } from "@/components/audit/keywords-tab";
 import { CompetitorsTab } from "@/components/audit/competitors-tab";
 import { SuggestionsTab } from "@/components/audit/suggestions-tab";
-import { FileText, RefreshCw, AlertCircle } from "lucide-react";
+import { FileText, RefreshCw, AlertCircle, Share2, Check, Copy } from "lucide-react";
 
 interface AuditData {
   id: string;
@@ -45,6 +45,9 @@ export default function AuditDashboardPage() {
   const [audit, setAudit] = useState<AuditData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [shareLink, setShareLink] = useState("");
+  const [sharing, setSharing] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const fetchAudit = async () => {
     try {
@@ -91,6 +94,37 @@ export default function AuditDashboardPage() {
       }
     } catch (err) {
       console.error("Failed to start crawl:", err);
+    }
+  };
+
+  const toggleShare = async () => {
+    try {
+      setSharing(true);
+      const res = await fetch("/api/audit/share", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          auditId,
+          action: shareLink ? "delete" : "create",
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setShareLink(data.shareLink || "");
+      }
+    } catch (err) {
+      console.error("Failed to toggle share:", err);
+    } finally {
+      setSharing(false);
+    }
+  };
+
+  const copyShareLink = () => {
+    if (shareLink) {
+      navigator.clipboard.writeText(shareLink);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     }
   };
 
@@ -142,12 +176,44 @@ export default function AuditDashboardPage() {
           </div>
           <div className="flex gap-2">
             {isComplete && (
-              <Link href={`/audit/${auditId}/pdf`}>
-                <Button variant="outline" className="gap-2">
-                  <FileText className="h-4 w-4" />
-                  Export PDF
+              <>
+                <Button
+                  onClick={toggleShare}
+                  disabled={sharing}
+                  variant="outline"
+                  className="gap-2"
+                  title={shareLink ? "Click to disable sharing" : "Click to generate shareable link"}
+                >
+                  <Share2 className="h-4 w-4" />
+                  {sharing ? "..." : shareLink ? "Shared" : "Share"}
                 </Button>
-              </Link>
+                {shareLink && (
+                  <Button
+                    onClick={copyShareLink}
+                    variant="outline"
+                    size="sm"
+                    className="gap-1"
+                  >
+                    {copied ? (
+                      <>
+                        <Check className="h-3 w-3" />
+                        Copied
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="h-3 w-3" />
+                        Copy Link
+                      </>
+                    )}
+                  </Button>
+                )}
+                <Link href={`/audit/${auditId}/pdf`}>
+                  <Button variant="outline" className="gap-2">
+                    <FileText className="h-4 w-4" />
+                    Export PDF
+                  </Button>
+                </Link>
+              </>
             )}
             {(isError || isPending) && (
               <Button onClick={startCrawl} className="gap-2">
