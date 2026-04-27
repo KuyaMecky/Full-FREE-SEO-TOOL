@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   LineChart, ArrowRight, Sparkles, Gauge, Globe, Settings as SettingsIcon,
-  CheckCircle, Circle, ExternalLink, Cpu, Shield, Zap, User, Bell,
+  CheckCircle, Circle, ExternalLink, Cpu, Shield, Zap, User, Bell, Webhook, Workflow,
 } from "lucide-react";
+import { APIStatusIndicator } from "@/app/components/api-status-indicator";
 
 interface IntegrationStatus {
   google: boolean;
@@ -62,11 +63,12 @@ const INTEGRATIONS = [
 ];
 
 const QUICK_LINKS = [
-  { href: "/team",             icon: Shield, label: "Team & Access",    sub: "Members, roles, property assignments" },
-  { href: "/history",          icon: Zap,    label: "Audit History",    sub: "All technical SEO audit reports" },
-  { href: "/content/drafts",   icon: Cpu,    label: "Content Drafts",   sub: "AI-generated articles and publishing queue" },
-  { href: "/settings/account", icon: User,   label: "Account Settings", sub: "Personal API keys and email alerts" },
-  { href: "/content/calendar", icon: Bell,   label: "Content Calendar", sub: "Kanban board for your content pipeline" },
+  { href: "/automation",       icon: Workflow, label: "n8n Automation",  sub: "Create workflows and automate tasks" },
+  { href: "/team",             icon: Shield,   label: "Team & Access",   sub: "Members, roles, property assignments" },
+  { href: "/history",          icon: Zap,      label: "Audit History",   sub: "All technical SEO audit reports" },
+  { href: "/content/drafts",   icon: Cpu,      label: "Content Drafts",  sub: "AI-generated articles and publishing queue" },
+  { href: "/settings/account", icon: User,     label: "Account Settings", sub: "Personal API keys and email alerts" },
+  { href: "/content/calendar", icon: Bell,     label: "Content Calendar", sub: "Kanban board for your content pipeline" },
 ];
 
 export default function SettingsPage() {
@@ -106,6 +108,9 @@ export default function SettingsPage() {
           {loading ? "Checking…" : `${connectedCount} of ${INTEGRATIONS.length} connected`}
         </div>
       </div>
+
+      {/* API Status Indicator */}
+      <APIStatusIndicator variant="full" />
 
       {/* Integrations */}
       <section>

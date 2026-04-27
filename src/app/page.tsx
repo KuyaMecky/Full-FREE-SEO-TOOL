@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { APIStatusIndicator } from "@/app/components/api-status-indicator";
 import { PortfolioTrendChart } from "@/components/properties/portfolio-trend-chart";
 
 interface UserData { id: string; email: string; name: string | null }
@@ -97,6 +98,9 @@ export default function HomePage() {
           </Link>
         </div>
       </div>
+
+      {/* API Status */}
+      <APIStatusIndicator variant="inline" />
 
       {properties.length === 0 ? <EmptyDash /> : (
         <>

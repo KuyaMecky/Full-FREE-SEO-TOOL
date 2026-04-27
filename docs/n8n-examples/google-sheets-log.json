@@ -1,0 +1,57 @@
+{
+  "name": "Log Audit Results to Google Sheets",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "webhook-uuid-here",
+        "options": {}
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [100, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json.data;\nreturn {\n  spreadsheetId: 'your-spreadsheet-id-here',\n  values: [[\n    new Date().toISOString(),\n    data.domain,\n    data.overallScore,\n    data.scores.technical,\n    data.scores.onPage,\n    data.scores.content,\n    data.scores.uxPerformance,\n    data.findingsCount,\n    data.criticalIssues,\n    data.highIssues,\n    `https://your-app.com/audit/${data.auditId}`\n  ]]\n};"
+      },
+      "name": "Transform Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 300]
+    },
+    {
+      "parameters": {
+        "authentication": "predefinedCredentialType",\n        "credentialType": "googleSheetsApi",\n        "spreadsheetId": "={{ $input.first().json.spreadsheetId }}",\n        "range": "Sheet1!A:K",\n        "values": "={{ $input.first().json.values }}"
+      },
+      "name": "Append to Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 2,
+      "position": [500, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Transform Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transform Data": {
+      "main": [
+        [
+          {
+            "node": "Append to Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

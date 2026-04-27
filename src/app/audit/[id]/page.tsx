@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
+import { TerminalLoader, TerminalSkeleton } from "@/app/components/terminal-loader";
 import { CrawlProgress } from "@/components/audit/crawl-progress";
 import { HealthScorecard } from "@/components/audit/health-scorecard";
 import { ExecutiveSummary } from "@/components/audit/executive-summary";
@@ -130,11 +131,18 @@ export default function AuditDashboardPage() {
 
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold mb-2">Audit Report</h1>
+          <p className="text-gray-400">Loading your SEO analysis results...</p>
+        </div>
+        <TerminalLoader
+          message="Loading audit data..."
+          subtitle={`Fetching results for audit ${auditId}`}
+          variant="full"
+        />
         <div className="space-y-4">
-          <Skeleton className="h-8 w-64" />
-          <Skeleton className="h-32 w-full" />
-          <Skeleton className="h-64 w-full" />
+          <TerminalSkeleton lines={5} />
         </div>
       </div>
     );

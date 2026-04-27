@@ -1,0 +1,60 @@
+{
+  "name": "Email on Audit Complete",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "webhook-uuid-here",
+        "options": {}
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [100, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  to: 'your-email@example.com',\n  subject: `SEO Audit Complete: ${$input.first().json.data.domain} - Score: ${$input.first().json.data.overallScore}/100`,\n  html: `\n    <h1>SEO Audit Complete</h1>\n    <p><strong>Domain:</strong> ${$input.first().json.data.domain}</p>\n    <p><strong>Overall Score:</strong> ${$input.first().json.data.overallScore}/100</p>\n    <ul>\n      <li>Critical Issues: ${$input.first().json.data.criticalIssues}</li>\n      <li>High Issues: ${$input.first().json.data.highIssues}</li>\n      <li>Total Findings: ${$input.first().json.data.findingsCount}</li>\n    </ul>\n    <p>\n      <a href=\"https://your-app.com/audit/${$input.first().json.data.auditId}\">\n        View Full Report\n      </a>\n    </p>\n  `\n};"
+      },
+      "name": "Build Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 300]
+    },
+    {
+      "parameters": {
+        "fromEmail": "noreply@seoauditpro.com",
+        "toEmail": "={{ $input.first().json.to }}",
+        "subject": "={{ $input.first().json.subject }}",
+        "htmlEmail": "={{ $input.first().json.html }}"
+      },
+      "name": "Send Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [500, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Build Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Email": {
+      "main": [
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

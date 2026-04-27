@@ -1,0 +1,61 @@
+{
+  "name": "Slack Notification on Audit Complete",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "webhook-uuid-here",
+        "options": {}
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [100, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const score = $input.first().json.data.overallScore;\nconst color = score >= 80 ? '#36a64f' : score >= 60 ? '#ffa500' : '#ff0000';\n\nreturn {\n  channel: '#seo-audits',\n  text: '🔍 SEO Audit Complete',\n  attachments: [{\n    color: color,\n    title: $input.first().json.data.domain,\n    fields: [\n      { title: 'Score', value: `${score}/100`, short: true },\n      { title: 'Critical Issues', value: String($input.first().json.data.criticalIssues), short: true },\n      { title: 'High Issues', value: String($input.first().json.data.highIssues), short: true },\n      { title: 'Total Findings', value: String($input.first().json.data.findingsCount), short: true }\n    ],\n    footer: 'SEO Audit Pro'\n  }]\n};"
+      },
+      "name": "Build Slack Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 300]
+    },
+    {
+      "parameters": {
+        "authentication": "predefinedCredentialType",
+        "credentialType": "slackApi",
+        "text": "={{ $input.first().json.text }}",
+        "channel": "={{ $input.first().json.channel }}",
+        "attachments": "={{ $input.first().json.attachments }}"
+      },
+      "name": "Send to Slack",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2,
+      "position": [500, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Build Slack Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Slack Message": {
+      "main": [
+        [
+          {
+            "node": "Send to Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

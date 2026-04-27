@@ -9,7 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, X, Plus } from "lucide-react";
+import { X, Plus } from "lucide-react";
+import { TerminalLoader } from "@/app/components/terminal-loader";
 
 const BUSINESS_TYPES = [
   "E-commerce",
@@ -272,15 +273,16 @@ export function AuditInputForm() {
         </div>
       )}
 
+      {loading && (
+        <TerminalLoader
+          message="Initializing audit..."
+          subtitle="Starting domain crawl and analysis"
+          variant="full"
+        />
+      )}
+
       <Button type="submit" size="lg" disabled={loading} className="w-full">
-        {loading ? (
-          <>
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            Creating Audit...
-          </>
-        ) : (
-          "Start SEO Audit"
-        )}
+        {loading ? "Starting Audit..." : "Start SEO Audit"}
       </Button>
     </form>
   );

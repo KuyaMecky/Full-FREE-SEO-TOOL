@@ -32,6 +32,7 @@ model User {
   alertRules       AlertRule[]
   apiKeys          ApiKey[]
   contentAutomations ContentAutomation[]
+  webhooks         Webhook[]
 }
 
 model GoogleAccount {
@@ -544,4 +545,24 @@ model AutomationLog {
   automation        ContentAutomation   @relation(fields: [automationId], references: [id], onDelete: Cascade)
 
   @@index([automationId, createdAt])
+}
+
+model Webhook {
+  id          String    @id @default(cuid())
+  userId      String
+  name        String
+  url         String
+  event       String    // "audit_complete", "findings_generated", etc.
+  active      Boolean   @default(true)
+  secret      String?   // For HMAC signature verification
+  headers     String    @default("{}")  // Custom headers as JSON
+  lastFiredAt DateTime?
+  lastError   String?
+  failCount   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, event])
+  @@index([active])
 }

@@ -8,7 +8,10 @@
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "n8n": "n8n start --listen 0.0.0.0",
+    "dev:with-n8n": "concurrently \"npm run dev\" \"npm run n8n\"",
+    "start:with-n8n": "concurrently \"npm run start\" \"npm run n8n\""
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.88.0",
@@ -24,6 +27,7 @@
     "dotenv": "^17.4.2",
     "jose": "^6.2.2",
     "lucide-react": "^1.8.0",
+    "n8n": "^2.8.4",
     "next": "16.2.3",
     "next-themes": "^0.4.6",
     "nodemailer": "^8.0.6",

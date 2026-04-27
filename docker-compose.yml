@@ -1,0 +1,123 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: seo-audit-postgres
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: seo_audit
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - seo-network
+
+  # n8n Service
+  n8n:
+    image: n8n:latest
+    container_name: seo-audit-n8n
+    environment:
+      - N8N_PORT=5678
+      - N8N_HOST=0.0.0.0
+      - N8N_PROTOCOL=https
+      - N8N_SSL_KEY=/etc/ssl/private/privkey.pem
+      - N8N_SSL_CERT=/etc/ssl/certs/fullchain.pem
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY:-your-secure-key-change-in-production}
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_USER=${N8N_DB_USER:-n8n}
+      - DB_POSTGRESDB_PASSWORD=${N8N_DB_PASSWORD:-n8npassword}
+      - DB_POSTGRESDB_DATABASE=n8n
+      - N8N_EXECUTIONS_MAX_RETURNED=10
+      - N8N_EXECUTIONS_TIMEOUT=300
+      - NODE_ENV=production
+    volumes:
+      - n8n-data:/home/node/.n8n
+      - /etc/ssl/certs:/etc/ssl/certs:ro
+      - /etc/ssl/private:/etc/ssl/private:ro
+    ports:
+      - "5678:5678"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5678/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - seo-network
+    restart: unless-stopped
+
+  # SEO Audit Pro App
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: seo-audit-app
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@postgres:5432/seo_audit
+      N8N_URL: http://n8n:5678
+      NEXT_PUBLIC_APP_URL: ${APP_URL:-https://yourdomain.com}
+      # Add other required env vars from .env
+    volumes:
+      - ./uploads:/app/uploads
+      - ./logs:/app/logs
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      n8n:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - seo-network
+    restart: unless-stopped
+    environment:
+      # Load from .env file
+      COMPOSE_FILE: docker-compose.yml
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: seo-audit-nginx
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - ./static:/usr/share/nginx/html:ro
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - app
+      - n8n
+    networks:
+      - seo-network
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
+    driver: local
+  n8n-data:
+    driver: local
+
+networks:
+  seo-network:
+    driver: bridge

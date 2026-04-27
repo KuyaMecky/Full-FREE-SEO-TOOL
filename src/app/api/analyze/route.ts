@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { calculateScores, generateFindings } from "@/lib/scoring";
 import { generateAIReport } from "@/lib/ai/analysis";
+import { triggerWebhook } from "@/lib/webhooks/trigger";
 import {
   ScoreCard,
   FindingData,
@@ -117,13 +118,29 @@ export async function POST(request: NextRequest) {
     });
 
     // Update audit with final scores and status
-    await prisma.audit.update({
+    const completedAudit = await prisma.audit.update({
       where: { id: auditId },
       data: {
         status: "complete",
         overallScore: scorecard.overall,
       },
     });
+
+    // Trigger webhooks
+    try {
+      await triggerWebhook(audit.userId, "audit_complete", {
+        auditId,
+        domain: audit.domain,
+        overallScore: scorecard.overall,
+        scores: scorecard,
+        findingsCount: findings.length,
+        criticalIssues: findings.filter((f) => f.severity === "critical").length,
+        highIssues: findings.filter((f) => f.severity === "high").length,
+      });
+    } catch (webhookError) {
+      console.error("Webhook trigger failed:", webhookError);
+      // Don't fail the audit if webhooks fail
+    }
 
     return NextResponse.json({
       success: true,
