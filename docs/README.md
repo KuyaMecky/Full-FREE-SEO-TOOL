@@ -4,9 +4,19 @@ Complete documentation for SEO Audit Pro features, components, and deployment.
 
 ## Getting Started
 
-- **New to SEO Audit Pro?** Start with [Components Guide](./COMPONENTS_GUIDE.md)
-- **Want quick reference?** See [Components Quick Reference](./COMPONENTS_QUICK_REFERENCE.md)
-- **Building a feature?** Check [Components Guide](./COMPONENTS_GUIDE.md) for available UI components
+**New to SEO Audit Pro?**
+1. Read [Quick Start Guide](./QUICK_START.md) first (5-minute guide)
+2. Then read [Complete User Guide](./COMPLETE_USER_GUIDE.md) for full details
+3. Visit `/demo/loaders` and `/demo/advanced-loaders` in app for examples
+
+**For Developers:**
+- [Technical Architecture](./TECHNICAL_ARCHITECTURE.md) - System design and components
+- [Components Guide](./COMPONENTS_GUIDE.md) - UI component documentation
+- [Components Quick Reference](./COMPONENTS_QUICK_REFERENCE.md) - Quick syntax lookup
+- [SEO Intelligence Guide](./SEO_INTELLIGENCE.md) - Feature-specific APIs
+
+**Having Issues?**
+- Check [Troubleshooting Guide](./TROUBLESHOOTING.md) for common problems
 
 ## Documentation Structure
 
@@ -263,9 +273,13 @@ Complete documentation for SEO Audit Pro features, components, and deployment.
 
 | Document | Purpose | Audience |
 |----------|---------|----------|
-| [SEO Intelligence Guide](./SEO_INTELLIGENCE.md) | Keyword research, content analysis, competitor analysis, rank tracking | All users and developers |
-| [Components Guide](./COMPONENTS_GUIDE.md) | Complete UI component documentation | Developers building features |
-| [Components Quick Reference](./COMPONENTS_QUICK_REFERENCE.md) | Fast component lookup | All developers |
+| [Quick Start](./QUICK_START.md) | 5-minute getting started guide with action plan | New users |
+| [Complete User Guide](./COMPLETE_USER_GUIDE.md) | Detailed walkthrough of all pages and features | All users |
+| [Troubleshooting](./TROUBLESHOOTING.md) | Solutions to common problems | All users |
+| [Technical Architecture](./TECHNICAL_ARCHITECTURE.md) | System design, tech stack, APIs | Developers |
+| [SEO Intelligence Guide](./SEO_INTELLIGENCE.md) | Feature APIs and implementation details | Developers |
+| [Components Guide](./COMPONENTS_GUIDE.md) | UI component documentation | Developers |
+| [Components Quick Reference](./COMPONENTS_QUICK_REFERENCE.md) | Quick component syntax lookup | Developers |
 | [VPS Deployment Guide](./VPS_DEPLOYMENT_GUIDE.md) | Self-hosted on VPS | DevOps, self-hosters |
 | [Docker Deployment](./DOCKER_DEPLOYMENT.md) | Docker Compose setup | DevOps, containerization |
 | [N8N Embedded README](./N8N_EMBEDDED_README.md) | n8n in the app | All users |
