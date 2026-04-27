@@ -285,7 +285,16 @@ export function AuditInputForm() {
           auditId={auditId}
           onComplete={(status) => {
             if (status === 'complete') {
-              router.push(`/audit/${auditId}`);
+              const competitorsList = competitors
+                .split("\n")
+                .map((c) => c.trim())
+                .filter(Boolean);
+              const params = new URLSearchParams({
+                auditId,
+                domain: domain.trim(),
+                competitors: JSON.stringify(competitorsList),
+              });
+              router.push(`/seo-intelligence?${params.toString()}`);
             }
           }}
         />
