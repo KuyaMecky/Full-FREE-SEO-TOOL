@@ -21,44 +21,50 @@ export async function GET(request: NextRequest) {
 
   const stream = new ReadableStream({
     start(controller) {
+      let lastUpdate = Date.now();
+
       const sendProgress = () => {
         const crawl = activeCrawls.get(auditId);
         if (crawl) {
+          const progress = crawl.progress;
+          lastUpdate = Date.now();
+
           controller.enqueue(
-            `data: ${JSON.stringify(crawl.progress)}\n\n`
+            `data: ${JSON.stringify(progress)}\n\n`
           );
 
-          if (crawl.progress.status === "complete" || crawl.progress.status === "error") {
-            controller.close();
+          if (progress.status === "complete" || progress.status === "error") {
+            setTimeout(() => controller.close(), 1000);
+            return true; // Signal to close interval
           }
         } else {
-          // Check if crawl finished recently
-          controller.enqueue(
-            `data: ${JSON.stringify({
-              totalPages: 0,
-              crawledPages: 0,
-              currentUrl: "Checking status...",
-              status: "crawling",
-              errors: [],
-            })}\n\n`
-          );
+          // Still waiting for crawl to start or already finished
+          const now = Date.now();
+          if (now - lastUpdate > 5000) {
+            // Send heartbeat if no updates in 5 seconds
+            controller.enqueue(
+              `data: ${JSON.stringify({
+                totalPages: 0,
+                crawledPages: 0,
+                currentUrl: "Waiting for crawl...",
+                status: "crawling",
+                errors: [],
+              })}\n\n`
+            );
+          }
         }
+        return false;
       };
 
       // Send initial progress
       sendProgress();
 
-      // Poll every 1 second
+      // Poll every 500ms for faster updates
       const interval = setInterval(() => {
-        const crawl = activeCrawls.get(auditId);
-        sendProgress();
-
-        if (!crawl || crawl.progress.status === "complete" || crawl.progress.status === "error") {
+        if (sendProgress()) {
           clearInterval(interval);
-          // Wait a bit then close
-          setTimeout(() => controller.close(), 2000);
         }
-      }, 1000);
+      }, 500);
 
       // Cleanup on client disconnect
       request.signal.addEventListener("abort", () => {

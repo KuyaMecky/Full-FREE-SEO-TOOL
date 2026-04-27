@@ -27,33 +27,53 @@ export function CrawlProgressLive({ auditId, onComplete }: CrawlProgressLiveProp
   });
 
   const [isConnected, setIsConnected] = useState(false);
+  const [timeout, setTimeout] = useState(false);
 
   useEffect(() => {
     // Connect to Server-Sent Events stream
     const eventSource = new EventSource(`/api/crawl/progress?auditId=${auditId}`);
+    let timeoutId: NodeJS.Timeout;
+    let hasData = false;
+
+    const resetTimeout = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        if (!hasData) {
+          setTimeout(true);
+          eventSource.close();
+        }
+      }, 60000); // 60 second timeout
+    };
 
     eventSource.onopen = () => {
       setIsConnected(true);
+      resetTimeout();
     };
 
     eventSource.onmessage = (event) => {
+      hasData = true;
+      setTimeout(false);
       const data = JSON.parse(event.data);
       setProgress(data);
+      resetTimeout();
 
       // Call callback when complete
       if (data.status === 'complete' || data.status === 'error') {
         onComplete?.(data.status);
         eventSource.close();
+        clearTimeout(timeoutId);
       }
     };
 
     eventSource.onerror = () => {
       setIsConnected(false);
       eventSource.close();
+      clearTimeout(timeoutId);
     };
 
     return () => {
       eventSource.close();
+      clearTimeout(timeoutId);
     };
   }, [auditId, onComplete]);
 
@@ -143,9 +163,16 @@ export function CrawlProgressLive({ auditId, onComplete }: CrawlProgressLiveProp
       </div>
 
       {/* Connection status */}
-      {!isConnected && (
+      {!isConnected && !timeout && (
         <div className="text-xs text-yellow-400 bg-yellow-500/10 border border-yellow-700/30 rounded px-3 py-2">
           ⚠️ Connection lost. Trying to reconnect...
+        </div>
+      )}
+
+      {/* Timeout message */}
+      {timeout && (
+        <div className="text-xs text-red-400 bg-red-500/10 border border-red-700/30 rounded px-3 py-2">
+          ⚠️ Crawl timeout. The website might be slow to crawl. You can check the audit page directly or try again.
         </div>
       )}
     </div>

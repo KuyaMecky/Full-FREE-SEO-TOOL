@@ -65,8 +65,8 @@ export async function POST(request: NextRequest) {
           }
         };
 
-        // Run the crawl
-        const { results, errors, robotsData, sitemapUrls } = await crawlWebsite(
+        // Run the crawl with timeout (30 seconds max)
+        const crawlPromise = crawlWebsite(
           audit.domain,
           {
             maxPages: audit.maxPages,
@@ -76,6 +76,15 @@ export async function POST(request: NextRequest) {
           },
           onProgress
         );
+
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Crawl timeout after 30 seconds")), 30000)
+        );
+
+        const { results, errors, robotsData, sitemapUrls } = await Promise.race([
+          crawlPromise,
+          timeoutPromise as Promise<any>,
+        ]) as any;
 
         // Save crawl results to database
         for (const result of results) {
