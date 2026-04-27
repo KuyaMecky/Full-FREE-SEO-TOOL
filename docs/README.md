@@ -12,6 +12,7 @@ Complete documentation for SEO Audit Pro features, components, and deployment.
 
 ### User Guides
 
+- **[SEO Intelligence Guide](./SEO_INTELLIGENCE.md)** - Ahrefs-like features (keyword research, content analysis, competitor analysis, rank tracking) using free APIs
 - **[Components Guide](./COMPONENTS_GUIDE.md)** - Complete documentation for all 13 UI components
   - API Status Indicators
   - Terminal Loaders (basic and advanced)
@@ -107,6 +108,13 @@ Complete documentation for SEO Audit Pro features, components, and deployment.
 - **Team Collaboration**: User roles, property assignments, shared reports
 - **Real-time Analytics**: GSC data, Core Web Vitals, ranking tracking
 - **Real-time Crawl Progress**: Live SSE streaming of audit crawl metrics
+
+### 🎯 SEO Intelligence (Ahrefs-like, FREE!)
+
+- **Keyword Research**: GSC data analysis, quick-win identification
+- **Content Analysis**: Readability scoring, word count, H1/H2 structure
+- **Competitor Analysis**: Compare metrics, find content gaps
+- **Rank Tracking**: Position monitoring and trend detection
 
 ### 🎯 UI Components (14 New!)
 
@@ -255,6 +263,7 @@ Complete documentation for SEO Audit Pro features, components, and deployment.
 
 | Document | Purpose | Audience |
 |----------|---------|----------|
+| [SEO Intelligence Guide](./SEO_INTELLIGENCE.md) | Keyword research, content analysis, competitor analysis, rank tracking | All users and developers |
 | [Components Guide](./COMPONENTS_GUIDE.md) | Complete UI component documentation | Developers building features |
 | [Components Quick Reference](./COMPONENTS_QUICK_REFERENCE.md) | Fast component lookup | All developers |
 | [VPS Deployment Guide](./VPS_DEPLOYMENT_GUIDE.md) | Self-hosted on VPS | DevOps, self-hosters |
