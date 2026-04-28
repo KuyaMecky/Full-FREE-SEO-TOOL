@@ -4,9 +4,10 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   LineChart, ArrowRight, Sparkles, Gauge, Globe, Settings as SettingsIcon,
-  CheckCircle, Circle, ExternalLink, Cpu, Shield, Zap, User, Bell, Webhook, Workflow,
+  CheckCircle, Circle, ExternalLink, Cpu, Shield, Zap, User, Bell, Webhook, Workflow, Key,
 } from "lucide-react";
 import { APIStatusIndicator } from "@/app/components/api-status-indicator";
+import { ApiKeysManager } from "@/app/components/api-keys-manager";
 
 interface IntegrationStatus {
   google: boolean;
@@ -166,6 +167,16 @@ export default function SettingsPage() {
             );
           })}
         </div>
+      </section>
+
+      {/* API Keys */}
+      <section className="rounded-2xl border border-border bg-card p-6">
+        <div className="flex items-center gap-3 mb-4">
+          <Key className="h-5 w-5 text-primary" />
+          <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground">Developer</p>
+          <div className="flex-1 h-px bg-border" />
+        </div>
+        <ApiKeysManager />
       </section>
 
       {/* Quick links */}
