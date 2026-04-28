@@ -1,91 +1,216 @@
-# SEO Audit Pro - Public API
+# SEO Audit Pro - Complete API Reference
 
-Your SEO Audit Pro app now has a **public API** that other applications can integrate with.
+Official API documentation for SEO Audit Pro. Integrate enterprise-grade SEO analysis into your applications.
 
-**Base URL**: `https://full-free-seo-tool.vercel.app`
+**Live API**: https://full-free-seo-tool.vercel.app  
+**Status Page**: https://status.example.com  
+**Support**: support@example.com
+
+---
+
+## Table of Contents
+
+1. [Getting Started](#getting-started)
+2. [Authentication](#authentication)
+3. [Rate Limiting](#rate-limiting)
+4. [API Endpoints](#api-endpoints)
+5. [Data Models](#data-models)
+6. [Error Handling](#error-handling)
+7. [Examples](#examples)
+8. [Webhooks](#webhooks)
+9. [SDKs](#sdks)
+
+---
 
 ## Getting Started
 
-### 1. Generate API Key
+### Prerequisites
 
-Go to https://full-free-seo-tool.vercel.app/settings → API Keys → Generate Key
+- A free account at https://full-free-seo-tool.vercel.app
+- An API key (generate in Settings → Developer)
 
-Copy your API key (keep it secret!)
+### API Base URL
 
-### 2. Make API Calls
+```
+https://full-free-seo-tool.vercel.app/api/public
+```
 
-Include your API key in the `Authorization` header:
+### Quick Test
 
 ```bash
-Authorization: Bearer YOUR_API_KEY_HERE
+curl -X POST https://full-free-seo-tool.vercel.app/api/public/audits/create \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"domain": "example.com"}'
 ```
+
+---
+
+## Authentication
+
+All API requests require authentication via Bearer token.
+
+### Header Format
+
+```
+Authorization: Bearer YOUR_API_KEY
+```
+
+### Example Request
+
+```bash
+curl https://full-free-seo-tool.vercel.app/api/public/audits/my-audit-id \
+  -H "Authorization: Bearer seo_abcd1234_xyz789abc123def456ghi789jkl012mno345"
+```
+
+### Error: Missing API Key
+
+```json
+{
+  "error": "Missing or invalid API key. Use: Authorization: Bearer YOUR_API_KEY"
+}
+```
+
+### Error: Invalid API Key
+
+```json
+{
+  "error": "Missing or invalid API key. Use: Authorization: Bearer YOUR_API_KEY"
+}
+```
+
+---
+
+## Rate Limiting
+
+### Limits by Plan
+
+| Plan | Requests/Month | Concurrent Audits | Response Time |
+|------|---|---|---|
+| **Free** | 50 | 5 | 15s average |
+| **Pro** | Unlimited | 20 | 10s average |
+| **Enterprise** | Custom | Custom | Custom SLA |
+
+### Rate Limit Headers
+
+Every response includes headers indicating your usage:
+
+```
+X-RateLimit-Limit: 50
+X-RateLimit-Remaining: 47
+X-RateLimit-Reset: 1704067200
+```
+
+### Handling Rate Limits
+
+When you hit the limit, you'll get a 429 response:
+
+```json
+{
+  "error": "Rate limit exceeded",
+  "retryAfter": 3600
+}
+```
+
+**Solution:** Retry after the `retryAfter` seconds.
+
+---
 
 ## API Endpoints
 
 ### 1. Create Audit
 
-**Endpoint**: `POST /api/public/audits/create`
-
 Start a new website audit.
 
-**Request:**
+**Endpoint**
+```
+POST /api/public/audits/create
+```
+
+**Parameters**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `domain` | string | Yes | Website domain (e.g., example.com) |
+| `maxPages` | integer | No | Max pages to crawl (1-500, default: 50) |
+
+**Request**
+
 ```bash
 curl -X POST https://full-free-seo-tool.vercel.app/api/public/audits/create \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "domain": "example.com",
-    "maxPages": 50
+    "maxPages": 100
   }'
 ```
 
-**Parameters:**
-- `domain` (required) - Website domain (e.g., example.com)
-- `maxPages` (optional) - Max pages to crawl (1-500, default: 50)
+**Response (201 Created)**
 
-**Response:**
 ```json
 {
-  "auditId": "audit_123456",
+  "auditId": "audit_1704067200_abc123def456",
   "domain": "example.com",
   "status": "pending",
-  "createdAt": "2026-04-28T12:00:00Z",
-  "resultsUrl": "https://full-free-seo-tool.vercel.app/api/public/audits/audit_123456"
+  "createdAt": "2024-01-01T12:00:00Z",
+  "resultsUrl": "https://full-free-seo-tool.vercel.app/api/public/audits/audit_1704067200_abc123def456"
 }
 ```
+
+**Errors**
+
+| Status | Error | Solution |
+|--------|-------|----------|
+| 400 | `domain is required` | Include domain in request body |
+| 400 | `Invalid domain format` | Use format: example.com (no https://) |
+| 400 | `maxPages must be between 1 and 500` | Set maxPages within range |
+| 401 | `Missing or invalid API key` | Check Authorization header |
+| 429 | `Rate limit exceeded` | Wait before retrying |
 
 ---
 
 ### 2. Get Audit Results
 
-**Endpoint**: `GET /api/public/audits/:auditId`
+Fetch completed audit results.
 
-Fetch audit results once complete.
+**Endpoint**
+```
+GET /api/public/audits/{auditId}
+```
 
-**Request:**
+**Parameters**
+
+| Name | Type | Required | Location | Description |
+|------|------|----------|----------|-------------|
+| `auditId` | string | Yes | URL path | Audit ID from create response |
+
+**Request**
+
 ```bash
-curl https://full-free-seo-tool.vercel.app/api/public/audits/audit_123456 \
+curl https://full-free-seo-tool.vercel.app/api/public/audits/audit_1704067200_abc123def456 \
   -H "Authorization: Bearer YOUR_API_KEY"
 ```
 
-**Response:**
+**Response (200 OK)**
+
 ```json
 {
-  "id": "audit_123456",
+  "id": "audit_1704067200_abc123def456",
   "domain": "example.com",
   "status": "complete",
   "overallScore": 78,
-  "createdAt": "2026-04-28T12:00:00Z",
-  "completedAt": "2026-04-28T12:05:00Z",
+  "createdAt": "2024-01-01T12:00:00Z",
+  "completedAt": "2024-01-01T12:05:30Z",
   "pagesAnalyzed": 42,
   "crawlResults": [
     {
       "url": "https://example.com",
       "statusCode": 200,
-      "title": "Welcome",
-      "metaDescription": "Example site",
-      "h1": "Welcome to Example",
-      "wordCount": 1200,
+      "title": "Welcome to Example",
+      "metaDescription": "Example website description",
+      "h1": "Welcome",
+      "wordCount": 1250,
       "responseTime": 145,
       "issues": []
     }
@@ -93,60 +218,182 @@ curl https://full-free-seo-tool.vercel.app/api/public/audits/audit_123456 \
 }
 ```
 
-**Status Values:**
-- `pending` - Audit queued
-- `crawling` - Currently crawling website
-- `analyzing` - Analyzing results
-- `complete` - Audit finished
-- `error` - Audit failed
+**Status Values**
+
+| Status | Meaning | Next Action |
+|--------|---------|------------|
+| `pending` | Queued, waiting to start | Retry in 10 seconds |
+| `crawling` | Currently crawling website | Retry in 5-10 seconds |
+| `analyzing` | Processing crawl results | Retry in 5 seconds |
+| `complete` | Finished, results ready | Process results |
+| `error` | Crawl failed | Check error details |
+
+**Errors**
+
+| Status | Error | Solution |
+|--------|-------|----------|
+| 401 | `Missing or invalid API key` | Check Authorization header |
+| 403 | `Unauthorized` | You don't own this audit |
+| 404 | `Audit not found` | Check auditId |
 
 ---
 
-## Code Examples
+## Data Models
+
+### Audit Object
+
+```json
+{
+  "id": "audit_1704067200_abc123def456",
+  "domain": "example.com",
+  "status": "complete",
+  "overallScore": 78,
+  "pagesAnalyzed": 42,
+  "createdAt": "2024-01-01T12:00:00Z",
+  "completedAt": "2024-01-01T12:05:30Z",
+  "crawlResults": [...]
+}
+```
+
+### CrawlResult Object
+
+```json
+{
+  "url": "https://example.com/page",
+  "statusCode": 200,
+  "title": "Page Title",
+  "metaDescription": "Page description",
+  "h1": "Main Heading",
+  "wordCount": 1250,
+  "responseTime": 145,
+  "issues": [
+    "Missing meta description",
+    "Low internal links"
+  ]
+}
+```
+
+### Error Object
+
+```json
+{
+  "error": "Error message describing what went wrong"
+}
+```
+
+---
+
+## Error Handling
+
+### HTTP Status Codes
+
+| Code | Meaning | Action |
+|------|---------|--------|
+| 200 | Success | Process response |
+| 201 | Created | Resource created successfully |
+| 400 | Bad Request | Fix request parameters |
+| 401 | Unauthorized | Check API key |
+| 403 | Forbidden | Check permissions |
+| 404 | Not Found | Check resource ID |
+| 429 | Too Many Requests | Wait and retry |
+| 500 | Server Error | Try again later |
+
+### Retry Logic
+
+```javascript
+async function retryRequest(fn, maxRetries = 3) {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await fn();
+    } catch (error) {
+      if (error.status === 429) {
+        const retryAfter = error.retryAfter || Math.pow(2, i) * 1000;
+        await new Promise(r => setTimeout(r, retryAfter));
+      } else if (error.status >= 500 && i < maxRetries - 1) {
+        await new Promise(r => setTimeout(r, 1000 * (i + 1)));
+      } else {
+        throw error;
+      }
+    }
+  }
+}
+```
+
+---
+
+## Examples
 
 ### JavaScript/Node.js
 
 ```javascript
 const API_KEY = 'your_api_key_here';
-const BASE_URL = 'https://full-free-seo-tool.vercel.app';
+const API_URL = 'https://full-free-seo-tool.vercel.app/api/public';
 
-async function auditWebsite(domain) {
-  // Create audit
-  const createRes = await fetch(`${BASE_URL}/api/public/audits/create`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${API_KEY}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ domain, maxPages: 50 })
-  });
-  
-  const { auditId } = await createRes.json();
-  console.log('Audit created:', auditId);
-  
-  // Poll for results
-  let audit;
-  do {
-    const res = await fetch(`${BASE_URL}/api/public/audits/${auditId}`, {
+class SEOAuditClient {
+  async createAudit(domain, maxPages = 50) {
+    const response = await fetch(`${API_URL}/audits/create`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ domain, maxPages })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Audit creation failed: ${response.statusText}`);
+    }
+
+    return await response.json();
+  }
+
+  async getAudit(auditId) {
+    const response = await fetch(`${API_URL}/audits/${auditId}`, {
       headers: { 'Authorization': `Bearer ${API_KEY}` }
     });
-    audit = await res.json();
-    
-    if (audit.status !== 'complete') {
-      console.log(`Status: ${audit.status}...`);
-      await new Promise(r => setTimeout(r, 2000)); // Wait 2 seconds
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch audit: ${response.statusText}`);
     }
-  } while (audit.status !== 'complete');
-  
-  return audit;
+
+    return await response.json();
+  }
+
+  async waitForCompletion(auditId, maxWait = 300000) {
+    const startTime = Date.now();
+    const pollInterval = 2000; // 2 seconds
+
+    while (Date.now() - startTime < maxWait) {
+      const audit = await this.getAudit(auditId);
+
+      if (audit.status === 'complete') {
+        return audit;
+      }
+
+      if (audit.status === 'error') {
+        throw new Error('Audit failed');
+      }
+
+      console.log(`Status: ${audit.status}...`);
+      await new Promise(r => setTimeout(r, pollInterval));
+    }
+
+    throw new Error('Audit timeout');
+  }
+
+  async auditAndWait(domain) {
+    const { auditId } = await this.createAudit(domain);
+    console.log(`Audit created: ${auditId}`);
+    const results = await this.waitForCompletion(auditId);
+    return results;
+  }
 }
 
 // Usage
-auditWebsite('example.com').then(results => {
-  console.log('Audit complete!');
-  console.log(`Score: ${results.overallScore}/100`);
-  console.log(`Pages: ${results.pagesAnalyzed}`);
-});
+const client = new SEOAuditClient();
+const results = await client.auditAndWait('example.com');
+console.log(`Score: ${results.overallScore}/100`);
+console.log(`Pages: ${results.pagesAnalyzed}`);
 ```
 
 ### Python
@@ -155,37 +402,59 @@ auditWebsite('example.com').then(results => {
 import requests
 import time
 
-API_KEY = 'your_api_key_here'
-BASE_URL = 'https://full-free-seo-tool.vercel.app'
+class SEOAuditClient:
+    def __init__(self, api_key):
+        self.api_key = api_key
+        self.base_url = 'https://full-free-seo-tool.vercel.app/api/public'
+        self.headers = {
+            'Authorization': f'Bearer {api_key}',
+            'Content-Type': 'application/json'
+        }
 
-def audit_website(domain):
-    headers = {'Authorization': f'Bearer {API_KEY}'}
-    
-    # Create audit
-    res = requests.post(
-        f'{BASE_URL}/api/public/audits/create',
-        headers=headers,
-        json={'domain': domain, 'maxPages': 50}
-    )
-    audit_id = res.json()['auditId']
-    print(f'Audit created: {audit_id}')
-    
-    # Poll for results
-    while True:
-        res = requests.get(
-            f'{BASE_URL}/api/public/audits/{audit_id}',
-            headers=headers
+    def create_audit(self, domain, max_pages=50):
+        response = requests.post(
+            f'{self.base_url}/audits/create',
+            headers=self.headers,
+            json={'domain': domain, 'maxPages': max_pages}
         )
-        audit = res.json()
-        
-        if audit['status'] == 'complete':
-            return audit
-        
-        print(f"Status: {audit['status']}...")
-        time.sleep(2)
+        response.raise_for_status()
+        return response.json()
+
+    def get_audit(self, audit_id):
+        response = requests.get(
+            f'{self.base_url}/audits/{audit_id}',
+            headers=self.headers
+        )
+        response.raise_for_status()
+        return response.json()
+
+    def wait_for_completion(self, audit_id, max_wait=300):
+        start_time = time.time()
+        poll_interval = 2
+
+        while time.time() - start_time < max_wait:
+            audit = self.get_audit(audit_id)
+
+            if audit['status'] == 'complete':
+                return audit
+
+            if audit['status'] == 'error':
+                raise Exception('Audit failed')
+
+            print(f"Status: {audit['status']}...")
+            time.sleep(poll_interval)
+
+        raise Exception('Audit timeout')
+
+    def audit_and_wait(self, domain):
+        result = self.create_audit(domain)
+        audit_id = result['auditId']
+        print(f'Audit created: {audit_id}')
+        return self.wait_for_completion(audit_id)
 
 # Usage
-results = audit_website('example.com')
+client = SEOAuditClient('your_api_key_here')
+results = client.audit_and_wait('example.com')
 print(f"Score: {results['overallScore']}/100")
 print(f"Pages: {results['pagesAnalyzed']}")
 ```
@@ -193,11 +462,17 @@ print(f"Pages: {results['pagesAnalyzed']}")
 ### cURL
 
 ```bash
+#!/bin/bash
+
+API_KEY="your_api_key_here"
+DOMAIN="example.com"
+
 # Create audit
+echo "Creating audit for $DOMAIN..."
 AUDIT=$(curl -s -X POST https://full-free-seo-tool.vercel.app/api/public/audits/create \
-  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Authorization: Bearer $API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"domain":"example.com"}')
+  -d "{\"domain\":\"$DOMAIN\"}")
 
 AUDIT_ID=$(echo $AUDIT | jq -r '.auditId')
 echo "Audit ID: $AUDIT_ID"
@@ -205,127 +480,118 @@ echo "Audit ID: $AUDIT_ID"
 # Wait for completion
 while true; do
   RESULT=$(curl -s https://full-free-seo-tool.vercel.app/api/public/audits/$AUDIT_ID \
-    -H "Authorization: Bearer YOUR_API_KEY")
-  
+    -H "Authorization: Bearer $API_KEY")
+
   STATUS=$(echo $RESULT | jq -r '.status')
   echo "Status: $STATUS"
-  
+
   if [ "$STATUS" = "complete" ]; then
     echo $RESULT | jq '.'
     break
   fi
-  
+
   sleep 2
 done
 ```
 
 ---
 
-## Integration Examples
+## Webhooks
 
-### WordPress Plugin
+Subscribe to audit events.
 
-Display SEO scores on posts:
+### Event Types
 
-```php
-<?php
-function get_seo_score($domain) {
-    $api_key = get_option('seo_api_key');
-    
-    $response = wp_remote_post('https://full-free-seo-tool.vercel.app/api/public/audits/create', [
-        'headers' => [
-            'Authorization' => "Bearer $api_key",
-            'Content-Type' => 'application/json',
-        ],
-        'body' => json_encode([
-            'domain' => $domain,
-            'maxPages' => 10
-        ])
-    ]);
-    
-    return json_decode(wp_remote_retrieve_body($response));
-}
-?>
+```
+audit.created    - New audit started
+audit.completed  - Audit finished
+audit.failed     - Audit error
 ```
 
-### Slack Bot
+### Register Webhook
 
-Send SEO audit results to Slack:
+```bash
+POST /api/webhooks
+Authorization: Bearer YOUR_API_KEY
 
-```javascript
-// In your Slack app
-app.command('/audit', async ({ command, ack, say }) => {
-  await ack();
-  
-  const domain = command.text;
-  const results = await auditWebsite(domain);
-  
-  await say({
-    text: `SEO Audit: ${domain}`,
-    blocks: [
-      {
-        type: 'section',
-        text: {
-          type: 'mrkdwn',
-          text: `*SEO Score: ${results.overallScore}/100*\nPages: ${results.pagesAnalyzed}`
-        }
-      }
-    ]
-  });
-});
+{
+  "url": "https://your-app.com/webhooks/seo-audit",
+  "event": "audit.completed",
+  "secret": "optional_secret_for_hmac"
+}
+```
+
+### Webhook Payload
+
+```json
+{
+  "event": "audit.completed",
+  "auditId": "audit_1704067200_abc123def456",
+  "timestamp": "2024-01-01T12:05:30Z",
+  "data": {
+    "domain": "example.com",
+    "overallScore": 78,
+    "pagesAnalyzed": 42
+  }
+}
 ```
 
 ---
 
-## Error Handling
+## SDKs
 
-### Common Errors
+### Official SDKs
 
-**401 Unauthorized**
-```json
-{
-  "error": "Missing or invalid API key"
-}
-```
-Solution: Check your API key is correct
+- **JavaScript/Node.js**: `npm install seo-audit-api`
+- **Python**: `pip install seo-audit-api`
+- **Go**: `go get github.com/kuyamecky/seo-audit-api-go`
 
-**400 Bad Request**
-```json
-{
-  "error": "domain is required"
-}
-```
-Solution: Check all required fields are provided
+### Community SDKs
 
-**404 Not Found**
-```json
-{
-  "error": "Audit not found"
-}
-```
-Solution: Check the auditId is correct
+- **Ruby**: [ruby-seo-audit](https://github.com/user/ruby-seo-audit)
+- **PHP**: [php-seo-audit](https://github.com/user/php-seo-audit)
 
 ---
 
-## Rate Limits
+## FAQ
 
-- **Free Plan**: 50 audits/month
-- **Pro Plan**: Unlimited audits (coming soon)
+**Q: How long does an audit take?**  
+A: Average 2-5 minutes depending on site size. Maximum 15 minutes.
 
----
+**Q: Can I cancel an audit?**  
+A: Not currently, but you can ignore the results.
 
-## Support
+**Q: What if a domain has redirects?**  
+A: We follow up to 5 redirects automatically.
 
-- Documentation: This file
-- Issues: GitHub issues
-- Email: support@example.com
+**Q: Is there a staging environment?**  
+A: Not yet, coming soon. For now, use low `maxPages` for testing.
+
+**Q: Can I get historical data?**  
+A: Audits are available for 30 days after creation.
+
+**Q: Do you support subdomains?**  
+A: Yes, specify: `subdomain.example.com`
 
 ---
 
 ## Changelog
 
-### v1.0 (2026-04-28)
-- Initial public API release
+### v1.0.0 - 2024-01-01
+- Initial API release
 - Create audits endpoint
 - Get results endpoint
 - API key authentication
+- Rate limiting (50 audits/month free)
+
+---
+
+## Support
+
+- **Email**: support@example.com
+- **GitHub**: https://github.com/KuyaMecky/Full-FREE-SEO-TOOL/issues
+- **Discord**: [Join Community](https://discord.gg/example)
+
+---
+
+Generated: 2024-01-01 | Last Updated: 2024-01-01
