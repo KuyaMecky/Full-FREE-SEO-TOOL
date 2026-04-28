@@ -80,8 +80,17 @@ export async function POST(request: NextRequest) {
             errors: [],
           });
           // Simulate crawl delay
-          await new Promise(resolve => setTimeout(resolve, 100));
+          await new Promise(resolve => setTimeout(resolve, 50));
         }
+
+        // Signal analysis phase
+        onProgress({
+          totalPages: results.length,
+          crawledPages: results.length,
+          currentUrl: "Analysis complete",
+          status: "analyzing",
+          errors: [],
+        });
 
         // Save crawl results to database
         for (const result of results) {
@@ -106,13 +115,25 @@ export async function POST(request: NextRequest) {
           });
         }
 
+        // Send completion signal before cleanup
+        onProgress({
+          totalPages: results.length,
+          crawledPages: results.length,
+          currentUrl: "Complete",
+          status: "complete",
+          errors: [],
+        });
+
+        // Wait a moment for signal to be sent
+        await new Promise(resolve => setTimeout(resolve, 500));
+
         // Clean up active crawl
         activeCrawls.delete(crawlId);
 
         // Update audit status
         await prisma.audit.update({
           where: { id: auditId },
-          data: { status: "analyzing" },
+          data: { status: "complete" },
         });
 
         // Trigger analysis
