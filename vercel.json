@@ -1,0 +1,15 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "framework": "nextjs",
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "env": [
+    "DATABASE_URL",
+    "NEXT_PUBLIC_APP_URL"
+  ],
+  "git": {
+    "deploymentEnabled": true
+  },
+  "ignoreCommand": "git diff --quiet HEAD^ HEAD -- src/ package.json prisma/ public/"
+}
