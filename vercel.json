@@ -4,10 +4,6 @@
   "framework": "nextjs",
   "cleanUrls": true,
   "trailingSlash": false,
-  "env": [
-    "DATABASE_URL",
-    "NEXT_PUBLIC_APP_URL"
-  ],
   "git": {
     "deploymentEnabled": true
   },
