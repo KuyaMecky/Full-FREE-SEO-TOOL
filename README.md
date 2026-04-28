@@ -745,7 +745,7 @@ See [Issues](https://github.com/KuyaMecky/Full-FREE-SEO-TOOL/issues) for communi
 
 - 📖 [GitHub Issues](https://github.com/KuyaMecky/Full-FREE-SEO-TOOL/issues) — Report bugs and request features
 - 💬 [GitHub Discussions](https://github.com/KuyaMecky/Full-FREE-SEO-TOOL/discussions) — Ask questions and discuss ideas
-- 📧 Email: anushka.yono@gmail.com
+- 📧 Email: Tallada88@gmail.com
 
 ---
 
