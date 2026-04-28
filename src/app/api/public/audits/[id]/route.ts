@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { validateApiKey } from "@/lib/api-key";
 
-function verifyApiKey(request: NextRequest): string | null {
+async function verifyApiKey(request: NextRequest): Promise<string | null> {
   const authHeader = request.headers.get("authorization");
   if (!authHeader?.startsWith("Bearer ")) {
     return null;
   }
-  return authHeader.slice(7);
+  const key = authHeader.slice(7);
+  const result = await validateApiKey(key);
+  return result?.userId || null;
 }
 
 export async function GET(
@@ -14,8 +17,8 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const apiKey = verifyApiKey(request);
-    if (!apiKey) {
+    const userId = await verifyApiKey(request);
+    if (!userId) {
       return NextResponse.json(
         { error: "Missing or invalid API key" },
         { status: 401 }
@@ -43,6 +46,14 @@ export async function GET(
       return NextResponse.json(
         { error: "Audit not found" },
         { status: 404 }
+      );
+    }
+
+    // Verify ownership
+    if (audit.userId !== userId) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 403 }
       );
     }
 

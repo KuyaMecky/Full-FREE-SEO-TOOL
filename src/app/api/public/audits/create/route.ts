@@ -1,29 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { validateApiKey } from "@/lib/api-key";
 
-function verifyApiKey(request: NextRequest): string | null {
+async function verifyApiKey(request: NextRequest): Promise<string | null> {
   const authHeader = request.headers.get("authorization");
   if (!authHeader?.startsWith("Bearer ")) {
     return null;
   }
-  return authHeader.slice(7);
+  const key = authHeader.slice(7);
+  const result = await validateApiKey(key);
+  return result?.userId || null;
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const apiKey = verifyApiKey(request);
-    if (!apiKey) {
+    const userId = await verifyApiKey(request);
+    if (!userId) {
       return NextResponse.json(
         { error: "Missing or invalid API key. Use: Authorization: Bearer YOUR_API_KEY" },
-        { status: 401 }
-      );
-    }
-
-    // TODO: Validate API key against database
-    // For now, accept any key
-    if (apiKey.length < 10) {
-      return NextResponse.json(
-        { error: "Invalid API key format" },
         { status: 401 }
       );
     }
@@ -55,13 +49,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create audit (no user required for public API)
+    // Create audit for the API key's user
     const audit = await prisma.audit.create({
       data: {
         domain,
         maxPages,
         status: "pending",
-        userId: "api_user", // Placeholder for API audits
+        userId,
         overallScore: null,
       },
       select: {
