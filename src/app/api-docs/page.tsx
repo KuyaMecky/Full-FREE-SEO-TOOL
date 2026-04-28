@@ -1,7 +1,5 @@
-"use client";
-
 import Link from "next/link";
-import { ArrowRight, Code, BookOpen, Zap, Github, ExternalLink } from "lucide-react";
+import { ArrowRight, Code, BookOpen, Zap, ExternalLink } from "lucide-react";
 
 export default function ApiDocsPage() {
   return (
@@ -231,7 +229,7 @@ export default function ApiDocsPage() {
           </div>
 
           <div className="flex gap-4">
-            <Github className="h-6 w-6 text-primary shrink-0 mt-1" />
+            <Code className="h-6 w-6 text-primary shrink-0 mt-1" />
             <div>
               <p className="font-semibold">Open Source</p>
               <p className="text-sm text-muted-foreground">Full source code available on GitHub</p>
@@ -252,7 +250,6 @@ export default function ApiDocsPage() {
               Generate API Key
             </Link>
             <a href="https://github.com/KuyaMecky/Full-FREE-SEO-TOOL" target="_blank" rel="noopener noreferrer" className="px-6 py-2 rounded-lg border border-border hover:bg-muted transition-colors font-semibold flex items-center gap-2">
-              <Github className="h-4 w-4" />
               GitHub
             </a>
           </div>
