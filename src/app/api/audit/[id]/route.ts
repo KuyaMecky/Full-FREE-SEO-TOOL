@@ -1,17 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { getSession } from "@/lib/auth";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getSession();
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const { id } = await params;
 
     const audit = await prisma.audit.findUnique({
@@ -32,10 +26,6 @@ export async function GET(
         { error: "Audit not found" },
         { status: 404 }
       );
-    }
-
-    if (audit.userId !== session.id) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     // Parse JSON fields
@@ -84,22 +74,14 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getSession();
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const { id } = await params;
 
     const audit = await prisma.audit.findUnique({
       where: { id },
-      select: { userId: true },
+      select: { id: true },
     });
     if (!audit) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
-    }
-    if (audit.userId !== session.id) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     await prisma.audit.delete({

@@ -1,14 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { getSession } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getSession();
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const body = await request.json();
     const {
       domain,
@@ -35,7 +29,7 @@ export async function POST(request: NextRequest) {
 
     const audit = await prisma.audit.create({
       data: {
-        userId: session.id,
+        userId: "default-user",
         domain: normalizedDomain,
         country: country || "US",
         language: language || "en",
@@ -61,13 +55,8 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   try {
-    const session = await getSession();
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const audits = await prisma.audit.findMany({
-      where: { userId: session.id },
+      where: { userId: "default-user" },
       orderBy: { createdAt: "desc" },
       select: {
         id: true,
