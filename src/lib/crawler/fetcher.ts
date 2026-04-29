@@ -16,7 +16,7 @@ export async function fetchPage(
 
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 30000); // 30s timeout
+    const timeout = setTimeout(() => controller.abort(), 60000); // 60s timeout per page
 
     const response = await fetch(url, {
       headers: {

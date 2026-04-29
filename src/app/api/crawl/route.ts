@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
         const results = generateMockCrawlResults(audit.domain, audit.maxPages);
         const errors = [];
 
-        // Simulate progress updates
+        // Simulate progress updates with more realistic timing
         for (let i = 0; i < results.length; i++) {
           onProgress({
             totalPages: results.length,
@@ -79,8 +79,8 @@ export async function POST(request: NextRequest) {
             status: "crawling",
             errors: [],
           });
-          // Simulate crawl delay
-          await new Promise(resolve => setTimeout(resolve, 50));
+          // Simulate crawl delay (200ms per page for more realistic timing)
+          await new Promise(resolve => setTimeout(resolve, 200));
         }
 
         // Signal analysis phase

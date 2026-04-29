@@ -42,7 +42,7 @@ export function CrawlProgressLive({ auditId, onComplete }: CrawlProgressLiveProp
           setTimeout(true);
           eventSource.close();
         }
-      }, 60000); // 60 second timeout
+      }, 180000); // 3 minute timeout (increased from 60s)
     };
 
     eventSource.onopen = () => {

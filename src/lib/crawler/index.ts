@@ -16,8 +16,8 @@ import { analyzePerformance } from "./analyzers/performance";
 
 const DEFAULT_OPTIONS: CrawlOptions = {
   maxPages: 50,
-  concurrentRequests: 2,
-  requestDelay: 500,
+  concurrentRequests: 3,
+  requestDelay: 300,
   respectRobotsTxt: true,
   userAgent: "SEO-Audit-Bot/1.0 (https://github.com/seo-audit-bot)",
 };
