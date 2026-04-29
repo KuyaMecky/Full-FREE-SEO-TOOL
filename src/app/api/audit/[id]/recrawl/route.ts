@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { getSession } from "@/lib/auth";
 import { activeCrawls } from "@/lib/crawl-store";
 
 export async function POST(
@@ -8,24 +7,15 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getSession();
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const { id } = await params;
 
-    // Get and verify audit ownership
+    // Get audit from database
     const audit = await prisma.audit.findUnique({
       where: { id },
     });
 
     if (!audit) {
       return NextResponse.json({ error: "Audit not found" }, { status: 404 });
-    }
-
-    if (audit.userId !== session.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
     // Delete old crawl results and findings

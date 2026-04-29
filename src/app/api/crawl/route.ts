@@ -2,15 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { crawlWebsite, CrawlProgress } from "@/lib/crawler";
 import { activeCrawls } from "@/lib/crawl-store";
-import { getSession } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getSession();
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const body = await request.json();
     const { auditId } = body;
 
@@ -21,17 +15,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get audit from database and verify ownership
+    // Get audit from database
     const audit = await prisma.audit.findUnique({
       where: { id: auditId },
     });
 
     if (!audit) {
       return NextResponse.json({ error: "Audit not found" }, { status: 404 });
-    }
-
-    if (audit.userId !== session.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
     // Update audit status
