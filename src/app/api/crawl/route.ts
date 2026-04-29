@@ -48,7 +48,18 @@ export async function POST(request: NextRequest) {
           abortController,
         });
 
-        const onProgress = (progress: CrawlProgress) => {
+        const onProgress = async (progress: CrawlProgress) => {
+          // Store progress in database for serverless compatibility
+          await prisma.audit.update({
+            where: { id: crawlId },
+            data: {
+              crawlProgress: JSON.stringify(progress),
+            },
+          }).catch(() => {
+            // Ignore database errors during progress updates
+          });
+
+          // Also store in memory for local dev
           const crawl = activeCrawls.get(crawlId);
           if (crawl) {
             crawl.progress = progress;
@@ -62,7 +73,7 @@ export async function POST(request: NextRequest) {
 
         // Simulate progress updates with faster timing for Vercel
         for (let i = 0; i < results.length; i++) {
-          onProgress({
+          await onProgress({
             totalPages: results.length,
             crawledPages: i + 1,
             currentUrl: results[i].url,
@@ -74,7 +85,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Signal analysis phase
-        onProgress({
+        await onProgress({
           totalPages: results.length,
           crawledPages: results.length,
           currentUrl: "Analysis complete",
@@ -106,7 +117,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Send completion signal before cleanup
-        onProgress({
+        await onProgress({
           totalPages: results.length,
           crawledPages: results.length,
           currentUrl: "Complete",
@@ -191,33 +202,52 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const crawl = activeCrawls.get(auditId);
-  if (!crawl) {
-    // Check if audit exists and is complete
-    const audit = await prisma.audit.findUnique({
-      where: { id: auditId },
-      select: { status: true },
-    });
+  // Check if audit exists
+  const audit = await prisma.audit.findUnique({
+    where: { id: auditId },
+    select: { status: true, crawlProgress: true },
+  });
 
-    if (audit?.status === "analyzing" || audit?.status === "complete") {
-      return NextResponse.json({
-        progress: {
-          totalPages: 0,
-          crawledPages: 0,
-          currentUrl: "Crawl complete",
-          status: "complete",
-          errors: [],
-        },
-      });
-    }
-
+  if (!audit) {
     return NextResponse.json(
-      { error: "Crawl not found" },
+      { error: "Audit not found" },
       { status: 404 }
     );
   }
 
-  return NextResponse.json({ progress: crawl.progress });
+  // Try to get from in-memory store first (for local dev)
+  const crawl = activeCrawls.get(auditId);
+  if (crawl) {
+    return NextResponse.json({ progress: crawl.progress });
+  }
+
+  // Fall back to database (for Vercel)
+  if (audit.crawlProgress && audit.crawlProgress !== "{}") {
+    return NextResponse.json({ progress: JSON.parse(audit.crawlProgress) });
+  }
+
+  // If no progress yet, return current status
+  if (audit.status === "pending") {
+    return NextResponse.json({
+      progress: {
+        totalPages: 0,
+        crawledPages: 0,
+        currentUrl: "Starting...",
+        status: "crawling",
+        errors: [],
+      },
+    });
+  }
+
+  return NextResponse.json({
+    progress: {
+      totalPages: 0,
+      crawledPages: 0,
+      currentUrl: "Complete",
+      status: "complete",
+      errors: [],
+    },
+  });
 }
 
 // Mock crawl data generation (replace with real crawlWebsite when available)

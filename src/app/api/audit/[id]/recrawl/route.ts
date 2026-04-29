@@ -59,7 +59,18 @@ export async function POST(
           abortController,
         });
 
-        const onProgress = (progress: any) => {
+        const onProgress = async (progress: any) => {
+          // Store progress in database for serverless compatibility
+          await prisma.audit.update({
+            where: { id },
+            data: {
+              crawlProgress: JSON.stringify(progress),
+            },
+          }).catch(() => {
+            // Ignore database errors during progress updates
+          });
+
+          // Also store in memory for local dev
           const crawl = activeCrawls.get(id);
           if (crawl) {
             crawl.progress = progress;
@@ -72,7 +83,7 @@ export async function POST(
 
         // Simulate progress updates with faster timing for Vercel
         for (let i = 0; i < results.length; i++) {
-          onProgress({
+          await onProgress({
             totalPages: results.length,
             crawledPages: i + 1,
             currentUrl: results[i].url,
@@ -84,7 +95,7 @@ export async function POST(
         }
 
         // Signal analysis phase
-        onProgress({
+        await onProgress({
           totalPages: results.length,
           crawledPages: results.length,
           currentUrl: "Analysis complete",
@@ -116,7 +127,7 @@ export async function POST(
         }
 
         // Send completion signal
-        onProgress({
+        await onProgress({
           totalPages: results.length,
           crawledPages: results.length,
           currentUrl: "Complete",
