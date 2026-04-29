@@ -49,6 +49,7 @@ export default function AuditDashboardPage() {
   const [shareLink, setShareLink] = useState("");
   const [sharing, setSharing] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [recrawling, setRecrawling] = useState(false);
 
   const fetchAudit = async () => {
     try {
@@ -95,6 +96,30 @@ export default function AuditDashboardPage() {
       }
     } catch (err) {
       console.error("Failed to start crawl:", err);
+    }
+  };
+
+  const startRecrawl = async () => {
+    if (!confirm(`Start a fresh audit for ${audit?.domain}? This will clear previous results and recrawl all pages.`)) {
+      return;
+    }
+
+    try {
+      setRecrawling(true);
+      const res = await fetch(`/api/audit/${auditId}/recrawl`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (res.ok) {
+        fetchAudit();
+      } else {
+        console.error("Failed to start recrawl");
+      }
+    } catch (err) {
+      console.error("Failed to start recrawl:", err);
+    } finally {
+      setRecrawling(false);
     }
   };
 
@@ -185,6 +210,16 @@ export default function AuditDashboardPage() {
           <div className="flex gap-2">
             {isComplete && (
               <>
+                <Button
+                  onClick={startRecrawl}
+                  disabled={recrawling}
+                  variant="outline"
+                  className="gap-2"
+                  title="Run a fresh audit"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  {recrawling ? "Recrawling..." : "Re-audit"}
+                </Button>
                 <Button
                   onClick={toggleShare}
                   disabled={sharing}
