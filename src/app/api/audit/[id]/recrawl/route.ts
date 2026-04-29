@@ -70,7 +70,7 @@ export async function POST(
         const results = generateMockCrawlResults(audit.domain, audit.maxPages);
         const errors = [];
 
-        // Simulate progress updates
+        // Simulate progress updates with faster timing for Vercel
         for (let i = 0; i < results.length; i++) {
           onProgress({
             totalPages: results.length,
@@ -79,8 +79,8 @@ export async function POST(
             status: "crawling",
             errors: [],
           });
-          // Simulate crawl delay
-          await new Promise((resolve) => setTimeout(resolve, 200));
+          // Simulate crawl delay (50ms per page for faster completion)
+          await new Promise((resolve) => setTimeout(resolve, 50));
         }
 
         // Signal analysis phase
