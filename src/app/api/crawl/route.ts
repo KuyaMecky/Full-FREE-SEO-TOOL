@@ -48,9 +48,15 @@ export async function POST(request: NextRequest) {
           abortController,
         });
 
-        const onProgress = async (progress: CrawlProgress) => {
-          // Store progress in database for serverless compatibility
-          await prisma.audit.update({
+        const onProgress = (progress: CrawlProgress) => {
+          // Store in memory for local dev
+          const crawl = activeCrawls.get(crawlId);
+          if (crawl) {
+            crawl.progress = progress;
+          }
+
+          // Store progress in database asynchronously (don't await)
+          prisma.audit.update({
             where: { id: crawlId },
             data: {
               crawlProgress: JSON.stringify(progress),
@@ -58,12 +64,6 @@ export async function POST(request: NextRequest) {
           }).catch(() => {
             // Ignore database errors during progress updates
           });
-
-          // Also store in memory for local dev
-          const crawl = activeCrawls.get(crawlId);
-          if (crawl) {
-            crawl.progress = progress;
-          }
         };
 
         // Simulate crawl data for testing
@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
 
         // Simulate progress updates with faster timing for Vercel
         for (let i = 0; i < results.length; i++) {
-          await onProgress({
+          onProgress({
             totalPages: results.length,
             crawledPages: i + 1,
             currentUrl: results[i].url,
@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Signal analysis phase
-        await onProgress({
+        onProgress({
           totalPages: results.length,
           crawledPages: results.length,
           currentUrl: "Analysis complete",
@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Send completion signal before cleanup
-        await onProgress({
+        onProgress({
           totalPages: results.length,
           crawledPages: results.length,
           currentUrl: "Complete",
