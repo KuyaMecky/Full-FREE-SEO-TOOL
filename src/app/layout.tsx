@@ -4,6 +4,7 @@ import "./globals.css";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AppShell } from "@/components/layout/app-shell";
+import { AuditNotification } from "@/app/components/audit-notification";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -46,6 +47,7 @@ export default function RootLayout({
         >
           <TooltipProvider>
             <AppShell>{children}</AppShell>
+            <AuditNotification />
           </TooltipProvider>
         </ThemeProvider>
       </body>
