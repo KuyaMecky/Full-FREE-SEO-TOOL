@@ -33,6 +33,18 @@ const NAV: Array<{ label?: string; items: NavItem[] }> = [
     ],
   },
   {
+    label: "Intelligence",
+    items: [
+      { href: "/seo-intelligence",     label: "Intelligence Report",    icon: Sparkles },
+      { href: "/keyword-intelligence", label: "Keyword Opportunities",  icon: KeyRound },
+      { href: "/content-performance",  label: "Content Analysis",       icon: BarChart2 },
+      { href: "/competitor-gaps",      label: "Competitor Gaps",        icon: Target },
+      { href: "/seo-health",           label: "Health Monitor",         icon: Activity },
+      { href: "/bulk-operations",      label: "Bulk Operations",        icon: Zap },
+      { href: "/reports",              label: "Generate Reports",       icon: FileText },
+    ],
+  },
+  {
     label: "Research",
     items: [
       { href: "/performance",    label: "Performance",    icon: Gauge },
@@ -76,6 +88,7 @@ const NAV: Array<{ label?: string; items: NavItem[] }> = [
     label: "Workspace",
     items: [
       { href: "/team",              label: "Team",            icon: Users },
+      { href: "/webhooks",          label: "Webhooks",        icon: LinkIcon },
       { href: "/alerts",            label: "Alert Rules",     icon: BellIcon },
       { href: "/settings",          label: "Settings",        icon: Settings },
       { href: "/settings/account",  label: "My Account",      icon: User },
@@ -347,6 +360,13 @@ function getTitle(p: string): string {
   if (p === "/properties") return "Properties";
   if (p.startsWith("/properties/connect")) return "Properties · Connect";
   if (p.startsWith("/properties/")) return "Properties · Detail";
+  if (p === "/seo-intelligence") return "Intelligence Report";
+  if (p === "/keyword-intelligence") return "Keyword Opportunities";
+  if (p === "/content-performance") return "Content Analysis";
+  if (p === "/competitor-gaps") return "Competitor Gap Analysis";
+  if (p === "/seo-health") return "SEO Health Monitor";
+  if (p === "/bulk-operations") return "Bulk Operations";
+  if (p === "/reports") return "Generate Reports";
   if (p === "/performance") return "Performance";
   if (p === "/keywords") return "Keywords";
   if (p === "/competitors") return "Competitors";
@@ -376,6 +396,7 @@ function getTitle(p: string): string {
   if (p === "/broken-links")       return "Broken Link Checker";
   if (p === "/hreflang")           return "Hreflang Validator";
   if (p === "/analytics")          return "Google Analytics 4";
+  if (p === "/webhooks")           return "Webhooks";
   if (p === "/alerts")             return "Alert Rules";
   if (p === "/team") return "Team";
   if (p === "/settings") return "Settings";

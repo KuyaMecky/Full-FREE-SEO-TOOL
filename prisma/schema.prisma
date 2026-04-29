@@ -38,6 +38,9 @@ model User {
   keywordData        KeywordData[]          @relation("KeywordData")
   competitorData     CompetitorData[]       @relation("CompetitorData")
   contentPerformance ContentPerformance[]   @relation("ContentPerformance")
+  bulkOperations     BulkOperation[]
+  healthScores       SEOHealthScore[]
+  progressMetrics    ProgressMetric[]
 }
 
 model GoogleAccount {
@@ -148,6 +151,9 @@ model Audit {
   competitorAnalysis    CompetitorData[]        @relation("CompetitorAnalysis")
   contentPerformance    ContentPerformance[]    @relation("ContentPerformance")
   issueImpactScores     IssueImpactScore[]      @relation("IssueImpactScores")
+  bulkOperations        BulkOperation[]
+  healthScores          SEOHealthScore[]
+  progressMetrics       ProgressMetric[]
 
   @@index([userId])
 }
@@ -696,5 +702,77 @@ model IssueImpactScore {
 
   @@unique([findingId])
   @@index([auditId, priorityScore])
+}
+
+model BulkOperation {
+  id               String   @id @default(cuid())
+  auditId          String
+  userId           String
+  operationType    String   // Type of bulk operation (update-meta-title, add-schema-markup, etc.)
+  pagesAffected    Int      // Number of pages targeted
+  successCount     Int      // Successfully processed pages
+  failureCount     Int      // Failed pages
+  estimatedImpact  Int      // Estimated traffic impact in clicks/month
+  result           String   @db.Text  // Detailed results as JSON
+  status           String   @default("completed")  // completed, in_progress, failed
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  audit            Audit    @relation(fields: [auditId], references: [id], onDelete: Cascade)
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([auditId, createdAt])
+  @@index([userId, createdAt])
+}
+
+model SEOHealthScore {
+  id                    String   @id @default(cuid())
+  auditId               String
+  userId                String
+  overallScore          Float    // 0-100 overall health score
+  issueScore            Float    // Based on issue count and severity (0-100)
+  contentScore          Float    // Based on content quality metrics (0-100)
+  technicalScore        Float    // Based on crawlability and indexing (0-100)
+  performanceScore      Float    // Based on Core Web Vitals (0-100)
+  keywordScore          Float    // Based on keyword rankings (0-100)
+  issueCount            Int      // Total issues found
+  criticalIssues        Int      // Critical severity issues
+  highIssues            Int      // High severity issues
+  mediumIssues          Int      // Medium severity issues
+  estimatedTrafficLoss  Int      // Estimated lost traffic in clicks/month
+  estimatedFixes        Int      // Estimated traffic recovery available
+  quickWinsAvailable    Int      // Number of high-impact low-effort fixes
+  averageFixTime        Int      // Average hours to implement fixes
+  reasoning             String   @db.Text  // Why the score is what it is
+  recordedAt            DateTime @default(now())
+  createdAt             DateTime @default(now())
+  audit                 Audit    @relation(fields: [auditId], references: [id], onDelete: Cascade)
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([auditId, recordedAt])
+  @@index([userId, recordedAt])
+  @@index([auditId, createdAt])
+}
+
+model ProgressMetric {
+  id                    String   @id @default(cuid())
+  auditId               String
+  userId                String
+  metricType            String   // "issue_fixed", "ranking_improved", "traffic_gained", etc.
+  baseline              Int      // Baseline value (e.g., initial ranking position)
+  current               Int      // Current value
+  improvement           Int      // Absolute improvement
+  percentImprovement    Float    // Percentage improvement
+  estimatedImpact       Int      // Estimated traffic impact
+  affectedPages         Int      // Number of pages affected
+  daysToResult          Int      // Days since fix was applied
+  status                String   @default("in_progress")  // in_progress, achieved, pending
+  details               String   @default("{}")  // Additional metadata as JSON
+  recordedAt            DateTime @default(now())
+  createdAt             DateTime @default(now())
+  audit                 Audit    @relation(fields: [auditId], references: [id], onDelete: Cascade)
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([auditId, metricType])
+  @@index([userId, recordedAt])
 }
 
