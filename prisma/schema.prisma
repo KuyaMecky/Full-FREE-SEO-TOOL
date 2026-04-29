@@ -30,11 +30,14 @@ model User {
   pageSnapshots    PageSnapshot[]
   userSettings     UserSettings?
   cwvHistory       CwvHistory[]
-  notifications    Notification[]
-  alertRules       AlertRule[]
-  apiKeys          ApiKey[]
+  notifications      Notification[]
+  alertRules         AlertRule[]
+  apiKeys            ApiKey[]
   contentAutomations ContentAutomation[]
-  webhooks         Webhook[]
+  webhooks           Webhook[]
+  keywordData        KeywordData[]          @relation("KeywordData")
+  competitorData     CompetitorData[]       @relation("CompetitorData")
+  contentPerformance ContentPerformance[]   @relation("ContentPerformance")
 }
 
 model GoogleAccount {
@@ -136,11 +139,15 @@ model Audit {
   competitorReport String?
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
-  user             User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  report           AuditReport?
-  crawlResults     CrawlResult[]
-  cwvResults       CwvResult[]
-  findings         Finding[]
+  user                  User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  report                AuditReport?
+  crawlResults          CrawlResult[]
+  cwvResults            CwvResult[]
+  findings              Finding[]
+  recommendations       SEORecommendation[]
+  competitorAnalysis    CompetitorData[]        @relation("CompetitorAnalysis")
+  contentPerformance    ContentPerformance[]    @relation("ContentPerformance")
+  issueImpactScores     IssueImpactScore[]      @relation("IssueImpactScores")
 
   @@index([userId])
 }
@@ -568,3 +575,126 @@ model Webhook {
   @@index([userId, event])
   @@index([active])
 }
+
+// SEO Intelligence Features - Phase 1 Foundation
+
+model SEORecommendation {
+  id              String   @id @default(cuid())
+  auditId         String
+  findingId       String?
+  category        String   // "content", "technical", "authority", "ux"
+  title           String
+  description     String   @db.Text
+  actionPlan      String   @db.Text  // Step-by-step implementation guide
+  estimatedImpact String   // "high", "medium", "low"
+  impactMetric    String   // e.g., "+15-20% organic traffic"
+  timeInvestment  String   // e.g., "2-4 hours"
+  priority        Int      // 1-10 priority score
+  relatedKeywords String   @default("[]")  // JSON array of keywords
+  implementation  String   @default("{}")  // Implementation guide as JSON
+  status          String   @default("pending")  // "pending", "in_progress", "completed"
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  audit           Audit    @relation(fields: [auditId], references: [id], onDelete: Cascade)
+
+  @@index([auditId, status])
+  @@index([priority, estimatedImpact])
+}
+
+model KeywordData {
+  id              String   @id @default(cuid())
+  userId          String
+  auditId         String?
+  keyword         String
+  searchVolume    Int?     // Monthly search volume
+  difficulty      Float?   // 0-100 difficulty score
+  intent          String?  // "commercial", "informational", "navigational", "transactional"
+  trend           String   @default("{}")  // Google Trends data as JSON
+  cpc             Float?   // Cost per click estimate
+  relatedKeywords String   @default("[]")  // Related keywords JSON
+  ranking         Int?     // Current ranking position
+  rankingUrl      String?
+  clicks          Int?     // Monthly clicks from this keyword
+  impressions     Int?     // Monthly impressions
+  ctr             Float?   // Click-through rate
+  lastUpdated     DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  user            User     @relation("KeywordData", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, keyword, auditId])
+  @@index([userId, searchVolume])
+  @@index([userId, ranking])
+}
+
+model CompetitorData {
+  id                String   @id @default(cuid())
+  auditId           String
+  userId            String
+  competitorDomain  String
+  keywords          String   @default("[]")  // Keywords they rank for (JSON)
+  topPages          String   @default("[]")  // Their best performing pages (JSON)
+  estimatedTraffic  Int?     // Estimated monthly traffic
+  dominatingTopics  String   @default("[]")  // Topics they dominate (JSON)
+  contentGaps       String   @default("[]")  // Opportunities we have (JSON)
+  backlinks         Int?     // Number of backlinks
+  dominatingDomains String   @default("[]")  // Where they get backlinks from (JSON)
+  lastAnalyzed      DateTime @default(now())
+  analysisData      String   @default("{}")  // Full analysis as JSON
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  user              User     @relation("CompetitorData", fields: [userId], references: [id], onDelete: Cascade)
+  audit             Audit    @relation("CompetitorAnalysis", fields: [auditId], references: [id], onDelete: Cascade)
+
+  @@unique([auditId, competitorDomain])
+  @@index([userId, competitorDomain])
+}
+
+model ContentPerformance {
+  id                String   @id @default(cuid())
+  auditId           String
+  userId            String
+  url               String
+  title             String?
+  keywords          String   @default("[]")  // Keywords ranking (JSON)
+  organicTraffic    Int?     // Monthly organic traffic
+  keywordCount      Int?     // Number of keywords ranking
+  topKeyword        String?  // Best performing keyword
+  topKeywordRank    Int?     // Ranking of top keyword
+  contentLength     Int?     // Word count
+  readabilityScore  Float?   // Flesch reading ease
+  engagementScore   Float?   // Based on available metrics
+  performanceScore  Float?   // PageSpeed score
+  lastAnalyzed      DateTime @default(now())
+  trend             String   @default("{}")  // Performance trend data JSON
+  recommendations   String   @default("[]")  // Content improvement tips (JSON)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  user              User     @relation("ContentPerformance", fields: [userId], references: [id], onDelete: Cascade)
+  audit             Audit    @relation("ContentPerformance", fields: [auditId], references: [id], onDelete: Cascade)
+
+  @@unique([auditId, url])
+  @@index([userId, organicTraffic])
+  @@index([userId, contentLength])
+}
+
+model IssueImpactScore {
+  id              String   @id @default(cuid())
+  findingId       String
+  auditId         String
+  issueType       String   // Type of issue
+  severityScore   Float    // 0-10 severity
+  impactScore     Float    // 0-10 potential traffic impact
+  affectedPages   Int      // Number of pages affected
+  estimatedTraffic Int     // Estimated traffic impact in clicks/month
+  fixComplexity   Float    // 0-10 effort to fix
+  priorityScore   Float    // Combined priority score
+  reasoning       String   @db.Text // Why this score was assigned
+  calculatedAt    DateTime @default(now())
+  createdAt       DateTime @default(now())
+  audit           Audit    @relation("IssueImpactScores", fields: [auditId], references: [id], onDelete: Cascade)
+
+  @@unique([findingId])
+  @@index([auditId, priorityScore])
+}
+
