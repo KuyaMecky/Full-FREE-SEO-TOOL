@@ -140,7 +140,9 @@ export async function POST(request: NextRequest) {
         // Trigger analysis
         try {
           const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
-          const host = process.env.VERCEL_URL || process.env.NEXT_PUBLIC_APP_URL || "localhost:3000";
+          let host = process.env.VERCEL_URL || process.env.NEXT_PUBLIC_APP_URL || "localhost:3000";
+          // Remove protocol from host if it exists
+          host = host.replace(/^https?:\/\//, "");
           const analysisUrl = `${protocol}://${host}/api/analyze`;
 
           console.log("Triggering analysis at:", analysisUrl);

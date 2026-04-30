@@ -27,9 +27,23 @@ export async function POST(request: NextRequest) {
       .replace(/^https?:\/\//, "")
       .replace(/\/+$/, "");
 
+    // Get or create default system user
+    let systemUser = await prisma.user.findUnique({
+      where: { email: "system@audit.local" },
+    });
+
+    if (!systemUser) {
+      systemUser = await prisma.user.create({
+        data: {
+          email: "system@audit.local",
+          name: "System",
+        },
+      });
+    }
+
     const audit = await prisma.audit.create({
       data: {
-        userId: "default-user",
+        userId: systemUser.id,
         domain: normalizedDomain,
         country: country || "US",
         language: language || "en",
@@ -55,8 +69,12 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   try {
+    const systemUser = await prisma.user.findUnique({
+      where: { email: "system@audit.local" },
+    });
+
     const audits = await prisma.audit.findMany({
-      where: { userId: "default-user" },
+      where: { userId: systemUser?.id || "" },
       orderBy: { createdAt: "desc" },
       select: {
         id: true,
