@@ -103,11 +103,16 @@ export function AuditInputForm() {
       setAuditId(data.id);
 
       // Start the crawl
-      await fetch("/api/crawl", {
+      const crawlRes = await fetch("/api/crawl", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ auditId: data.id }),
       });
+
+      if (!crawlRes.ok) {
+        const crawlError = await crawlRes.json();
+        throw new Error(crawlError.error || "Failed to start crawl");
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
       setLoading(false);

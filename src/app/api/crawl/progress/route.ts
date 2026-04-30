@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { prisma } from "@/lib/db";
 import { activeCrawls } from "@/lib/crawl-store";
 
 export async function GET(request: NextRequest) {
@@ -6,71 +7,83 @@ export async function GET(request: NextRequest) {
   const auditId = searchParams.get("auditId");
 
   if (!auditId) {
-    return new Response(
-      `data: ${JSON.stringify({ error: "Audit ID required" })}\n\n`,
-      {
-        status: 400,
-        headers: {
-          "Content-Type": "text/event-stream",
-          "Cache-Control": "no-cache",
-          Connection: "keep-alive",
-        },
-      }
-    );
+    return new Response("Audit ID is required", { status: 400 });
   }
 
+  // Create a response stream
   const stream = new ReadableStream({
-    start(controller) {
-      let lastUpdate = Date.now();
+    async start(controller) {
+      try {
+        // Send initial connection message
+        controller.enqueue(
+          `data: ${JSON.stringify({ status: "connected" })}\n\n`
+        );
 
-      const sendProgress = () => {
-        const crawl = activeCrawls.get(auditId);
-        if (crawl) {
-          const progress = crawl.progress;
-          lastUpdate = Date.now();
+        // Function to send progress updates
+        const sendProgress = async () => {
+          try {
+            // Try in-memory store first (local dev)
+            const crawl = activeCrawls.get(auditId);
+            if (crawl) {
+              controller.enqueue(
+                `data: ${JSON.stringify(crawl.progress)}\n\n`
+              );
 
-          controller.enqueue(
-            `data: ${JSON.stringify(progress)}\n\n`
-          );
+              // Check if crawl is complete
+              if (
+                crawl.progress.status === "complete" ||
+                crawl.progress.status === "error"
+              ) {
+                controller.close();
+                return true;
+              }
+            } else {
+              // Fall back to database
+              const audit = await prisma.audit.findUnique({
+                where: { id: auditId },
+                select: { crawlProgress: true, status: true },
+              });
 
-          if (progress.status === "complete" || progress.status === "error") {
-            setTimeout(() => controller.close(), 1000);
-            return true; // Signal to close interval
+              if (audit?.crawlProgress && audit.crawlProgress !== "{}") {
+                const progress = JSON.parse(audit.crawlProgress);
+                controller.enqueue(`data: ${JSON.stringify(progress)}\n\n`);
+
+                if (
+                  audit.status === "complete" ||
+                  audit.status === "error"
+                ) {
+                  controller.close();
+                  return true;
+                }
+              }
+            }
+
+            return false;
+          } catch (error) {
+            console.error("Error sending progress:", error);
+            return false;
           }
-        } else {
-          // Still waiting for crawl to start or already finished
-          const now = Date.now();
-          if (now - lastUpdate > 5000) {
-            // Send heartbeat if no updates in 5 seconds
-            controller.enqueue(
-              `data: ${JSON.stringify({
-                totalPages: 0,
-                crawledPages: 0,
-                currentUrl: "Waiting for crawl...",
-                status: "crawling",
-                errors: [],
-              })}\n\n`
-            );
+        };
+
+        // Poll for updates every 500ms
+        const pollInterval = setInterval(async () => {
+          const isComplete = await sendProgress();
+          if (isComplete) {
+            clearInterval(pollInterval);
           }
-        }
-        return false;
-      };
+        }, 500);
 
-      // Send initial progress
-      sendProgress();
+        // Initial progress
+        await sendProgress();
 
-      // Poll every 500ms for faster updates
-      const interval = setInterval(() => {
-        if (sendProgress()) {
-          clearInterval(interval);
-        }
-      }, 500);
-
-      // Cleanup on client disconnect
-      request.signal.addEventListener("abort", () => {
-        clearInterval(interval);
+        // Clean up on disconnect
+        return () => {
+          clearInterval(pollInterval);
+        };
+      } catch (error) {
+        console.error("Stream error:", error);
         controller.close();
-      });
+      }
     },
   });
 
