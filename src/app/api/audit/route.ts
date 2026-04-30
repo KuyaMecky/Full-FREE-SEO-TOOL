@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { getSession } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
   try {
@@ -27,23 +28,32 @@ export async function POST(request: NextRequest) {
       .replace(/^https?:\/\//, "")
       .replace(/\/+$/, "");
 
-    // Get or create default system user
-    let systemUser = await prisma.user.findUnique({
-      where: { email: "system@audit.local" },
-    });
+    // Get authenticated user or fall back to system user
+    let userId: string;
+    const session = await getSession();
 
-    if (!systemUser) {
-      systemUser = await prisma.user.create({
-        data: {
-          email: "system@audit.local",
-          name: "System",
-        },
+    if (session?.id) {
+      userId = session.id;
+    } else {
+      // Get or create default system user for unauthenticated requests
+      let systemUser = await prisma.user.findUnique({
+        where: { email: "system@audit.local" },
       });
+
+      if (!systemUser) {
+        systemUser = await prisma.user.create({
+          data: {
+            email: "system@audit.local",
+            name: "System",
+          },
+        });
+      }
+      userId = systemUser.id;
     }
 
     const audit = await prisma.audit.create({
       data: {
-        userId: systemUser.id,
+        userId,
         domain: normalizedDomain,
         country: country || "US",
         language: language || "en",
@@ -69,12 +79,26 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   try {
-    const systemUser = await prisma.user.findUnique({
-      where: { email: "system@audit.local" },
-    });
+    const session = await getSession();
+
+    let userId: string | null = null;
+
+    if (session?.id) {
+      userId = session.id;
+    } else {
+      // For unauthenticated users, get system user's audits
+      const systemUser = await prisma.user.findUnique({
+        where: { email: "system@audit.local" },
+      });
+      userId = systemUser?.id || null;
+    }
+
+    if (!userId) {
+      return NextResponse.json([]);
+    }
 
     const audits = await prisma.audit.findMany({
-      where: { userId: systemUser?.id || "" },
+      where: { userId },
       orderBy: { createdAt: "desc" },
       select: {
         id: true,
