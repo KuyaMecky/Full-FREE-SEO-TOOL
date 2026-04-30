@@ -10,78 +10,84 @@ export async function GET(request: NextRequest) {
     return new Response("Audit ID is required", { status: 400 });
   }
 
-  // Create a response stream
   const stream = new ReadableStream({
     async start(controller) {
+      let isClosed = false;
+      let pollInterval: NodeJS.Timeout;
+
+      const sendProgress = async () => {
+        if (isClosed) return true;
+
+        try {
+          const crawl = activeCrawls.get(auditId);
+          if (crawl) {
+            controller.enqueue(
+              `data: ${JSON.stringify(crawl.progress)}\n\n`
+            );
+
+            if (
+              crawl.progress.status === "complete" ||
+              crawl.progress.status === "error"
+            ) {
+              isClosed = true;
+              controller.close();
+              return true;
+            }
+          } else {
+            const audit = await prisma.audit.findUnique({
+              where: { id: auditId },
+              select: { crawlProgress: true, status: true },
+            });
+
+            if (audit?.crawlProgress && audit.crawlProgress !== "{}") {
+              const progress = JSON.parse(audit.crawlProgress);
+              controller.enqueue(`data: ${JSON.stringify(progress)}\n\n`);
+
+              if (
+                audit.status === "complete" ||
+                audit.status === "error"
+              ) {
+                isClosed = true;
+                controller.close();
+                return true;
+              }
+            }
+          }
+
+          return false;
+        } catch (error) {
+          if (!isClosed) {
+            console.error("Error sending progress:", error);
+          }
+          return false;
+        }
+      };
+
       try {
-        // Send initial connection message
+        // Send initial connection
         controller.enqueue(
           `data: ${JSON.stringify({ status: "connected" })}\n\n`
         );
 
-        // Function to send progress updates
-        const sendProgress = async () => {
-          try {
-            // Try in-memory store first (local dev)
-            const crawl = activeCrawls.get(auditId);
-            if (crawl) {
-              controller.enqueue(
-                `data: ${JSON.stringify(crawl.progress)}\n\n`
-              );
+        // Initial check
+        const isComplete = await sendProgress();
 
-              // Check if crawl is complete
-              if (
-                crawl.progress.status === "complete" ||
-                crawl.progress.status === "error"
-              ) {
-                controller.close();
-                return true;
-              }
-            } else {
-              // Fall back to database
-              const audit = await prisma.audit.findUnique({
-                where: { id: auditId },
-                select: { crawlProgress: true, status: true },
-              });
-
-              if (audit?.crawlProgress && audit.crawlProgress !== "{}") {
-                const progress = JSON.parse(audit.crawlProgress);
-                controller.enqueue(`data: ${JSON.stringify(progress)}\n\n`);
-
-                if (
-                  audit.status === "complete" ||
-                  audit.status === "error"
-                ) {
-                  controller.close();
-                  return true;
-                }
-              }
+        if (!isComplete) {
+          pollInterval = setInterval(async () => {
+            const complete = await sendProgress();
+            if (complete) {
+              clearInterval(pollInterval);
             }
+          }, 500);
+        }
 
-            return false;
-          } catch (error) {
-            console.error("Error sending progress:", error);
-            return false;
-          }
-        };
-
-        // Poll for updates every 500ms
-        const pollInterval = setInterval(async () => {
-          const isComplete = await sendProgress();
-          if (isComplete) {
-            clearInterval(pollInterval);
-          }
-        }, 500);
-
-        // Initial progress
-        await sendProgress();
-
-        // Clean up on disconnect
         return () => {
-          clearInterval(pollInterval);
+          isClosed = true;
+          if (pollInterval) clearInterval(pollInterval);
         };
       } catch (error) {
-        console.error("Stream error:", error);
+        console.error("Stream startup error:", error);
+        isClosed = true;
         controller.close();
       }
     },
