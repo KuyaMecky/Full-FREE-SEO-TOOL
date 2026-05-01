@@ -1,28 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { calculateScores, generateFindings } from "@/lib/scoring";
-import { generateAIReport } from "@/lib/ai/analysis";
-import { triggerWebhook } from "@/lib/webhooks/trigger";
-import {
-  ScoreCard,
-  FindingData,
-  ExecutiveSummary,
-  RoadmapItem,
-  KpiTarget,
-  ActionItem,
-} from "@/types/audit";
 
 export async function POST(request: NextRequest) {
+  let auditId: string;
+
   try {
     const body = await request.json();
-    const { auditId } = body;
+    auditId = body.auditId;
 
     if (!auditId) {
-      return NextResponse.json(
-        { error: "Audit ID is required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Audit ID is required" }, { status: 400 });
     }
+
+    console.log(`[${auditId}] Starting analysis`);
 
     // Get audit with crawl results
     const audit = await prisma.audit.findUnique({
@@ -35,27 +25,29 @@ export async function POST(request: NextRequest) {
     }
 
     if (audit.crawlResults.length === 0) {
-      return NextResponse.json(
-        { error: "No crawl results found" },
-        { status: 400 }
-      );
+      throw new Error("No crawl results found");
     }
+
+    console.log(`[${auditId}] Found ${audit.crawlResults.length} crawl results`);
 
     // Parse crawl results
     const crawlResults = audit.crawlResults.map((result) => ({
       ...result,
+      issues: JSON.parse(result.issues || "[]"),
       headings: JSON.parse(result.headings || "[]"),
       links: JSON.parse(result.links || "[]"),
       images: JSON.parse(result.images || "[]"),
-      structuredData: JSON.parse(result.structuredData || "[]"),
-      issues: JSON.parse(result.issues || "[]"),
     }));
 
-    // Calculate scores
-    const scorecard = calculateScores(crawlResults);
+    // Calculate simple score (0-100)
+    const score = calculateScore(crawlResults);
 
-    // Generate findings
+    console.log(`[${auditId}] Calculated score: ${score}`);
+
+    // Generate findings from issues
     const findings = generateFindings(crawlResults);
+
+    console.log(`[${auditId}] Generated ${findings.length} findings`);
 
     // Save findings to database
     for (const finding of findings) {
@@ -64,107 +56,247 @@ export async function POST(request: NextRequest) {
           auditId,
           category: finding.category,
           issue: finding.issue,
-          evidence: finding.evidence,
-          affectedUrls: JSON.stringify(finding.affectedUrls),
+          evidence: finding.evidence || "",
+          affectedUrls: JSON.stringify(finding.affectedUrls || []),
           severity: finding.severity,
           impact: finding.impact,
           recommendedFix: finding.recommendedFix,
-          owner: finding.owner,
+          owner: "dev",
           effort: finding.effort,
           priority: finding.priority,
         },
       });
     }
 
-    // Try AI analysis if API key is available
-    let reportData: {
-      executiveSummary: ExecutiveSummary;
-      roadmap: RoadmapItem[];
-      kpiPlan: KpiTarget[];
-      actionItems: ActionItem[];
-      stakeholderSummary: string;
-      devTaskList: { task: string; priority: "high" | "medium" | "low"; effort: string; details: string }[];
-    } | null = null;
-
-    try {
-      reportData = await generateAIReport(
-        audit,
-        crawlResults,
-        scorecard,
-        findings
-      );
-    } catch (error) {
-      console.error("AI analysis failed, using rule-based fallback:", error);
-      reportData = generateRuleBasedReport(
-        audit,
-        crawlResults,
-        scorecard,
-        findings
-      );
-    }
+    // Generate simple report
+    const report = generateReport(audit, crawlResults, findings, score);
 
     // Save report
     await prisma.auditReport.create({
       data: {
         auditId,
-        executiveSummary: JSON.stringify(reportData.executiveSummary),
-        scorecard: JSON.stringify(scorecard),
-        roadmap: JSON.stringify(reportData.roadmap),
-        kpiPlan: JSON.stringify(reportData.kpiPlan),
-        actionItems: JSON.stringify(reportData.actionItems),
-        stakeholderSummary: reportData.stakeholderSummary,
-        devTaskList: JSON.stringify(reportData.devTaskList),
+        executiveSummary: JSON.stringify(report.executiveSummary),
+        scorecard: JSON.stringify({ overall: score }),
+        roadmap: JSON.stringify(report.roadmap),
+        kpiPlan: JSON.stringify(report.kpiPlan),
+        actionItems: JSON.stringify(report.actionItems),
+        stakeholderSummary: report.stakeholderSummary,
+        devTaskList: JSON.stringify(report.devTaskList),
       },
     });
 
-    // Update audit with final scores and status
-    const completedAudit = await prisma.audit.update({
+    // Update audit with final score
+    await prisma.audit.update({
       where: { id: auditId },
       data: {
         status: "complete",
-        overallScore: scorecard.overall,
+        overallScore: score,
       },
     });
 
-    // Trigger webhooks
-    try {
-      await triggerWebhook(audit.userId, "audit_complete", {
-        auditId,
-        domain: audit.domain,
-        overallScore: scorecard.overall,
-        scores: scorecard,
-        findingsCount: findings.length,
-        criticalIssues: findings.filter((f) => f.severity === "critical").length,
-        highIssues: findings.filter((f) => f.severity === "high").length,
-      });
-    } catch (webhookError) {
-      console.error("Webhook trigger failed:", webhookError);
-      // Don't fail the audit if webhooks fail
-    }
+    console.log(`[${auditId}] Analysis complete!`);
 
     return NextResponse.json({
       success: true,
-      scorecard,
+      score,
       findingsCount: findings.length,
     });
   } catch (error) {
-    console.error("Analysis failed:", error);
+    console.error(`[${auditId}] Analysis error:`, error);
 
-    // Update audit with error
-    await prisma.audit.update({
-      where: { id: (await request.json()).auditId },
-      data: {
-        status: "error",
-        errorMessage:
-          error instanceof Error ? error.message : "Analysis failed",
-      },
-    });
+    if (auditId) {
+      await prisma.audit.update({
+        where: { id: auditId },
+        data: {
+          status: "error",
+          errorMessage: error instanceof Error ? error.message : "Analysis failed",
+        },
+      }).catch(() => {});
+    }
 
     return NextResponse.json(
-      { error: "Analysis failed" },
+      { error: "Analysis failed", details: error instanceof Error ? error.message : "" },
       { status: 500 }
     );
   }
+}
+
+function calculateScore(crawlResults: any[]): number {
+  let score = 100;
+
+  for (const result of crawlResults) {
+    const issues = result.issues || [];
+    for (const issue of issues) {
+      if (issue.severity === "critical") score -= 10;
+      else if (issue.severity === "high") score -= 5;
+      else if (issue.severity === "medium") score -= 2;
+      else if (issue.severity === "low") score -= 1;
+    }
+  }
+
+  return Math.max(0, Math.min(100, score));
+}
+
+function generateFindings(crawlResults: any[]) {
+  const findings: any[] = [];
+  const seenIssues = new Set<string>();
+
+  for (const result of crawlResults) {
+    const issues = result.issues || [];
+
+    for (const issue of issues) {
+      const key = `${issue.type}`;
+
+      if (!seenIssues.has(key)) {
+        seenIssues.add(key);
+
+        const severityMap: any = {
+          critical: { impact: "High", effort: "Medium" },
+          high: { impact: "Medium", effort: "Medium" },
+          medium: { impact: "Low", effort: "Low" },
+          low: { impact: "Low", effort: "Low" },
+        };
+
+        const meta = severityMap[issue.severity] || { impact: "Low", effort: "Low" };
+
+        findings.push({
+          category: getCategory(issue.type),
+          issue: getIssueTitle(issue.type),
+          evidence: `Found on ${getAffectedPages(crawlResults, issue.type).length} pages`,
+          affectedUrls: getAffectedPages(crawlResults, issue.type),
+          severity: issue.severity,
+          impact: meta.impact,
+          recommendedFix: getRecommendedFix(issue.type),
+          priority: getPriority(issue.severity),
+        });
+      }
+    }
+  }
+
+  return findings;
+}
+
+function generateReport(audit: any, crawlResults: any[], findings: any[], score: number) {
+  const domain = audit.domain;
+  const totalPages = crawlResults.length;
+
+  return {
+    executiveSummary: {
+      overview: `SEO audit of ${domain} reveals a score of ${score}/100 across ${totalPages} pages.`,
+      keyFindings: findings.slice(0, 5).map((f) => f.issue),
+      topOpportunities: findings
+        .filter((f) => f.severity === "critical" || f.severity === "high")
+        .slice(0, 3)
+        .map((f) => f.recommendedFix),
+      riskAreas: findings.length > 5 ? [`${findings.length} issues found`] : ["Site is in good condition"],
+    },
+    roadmap: [
+      {
+        phase: "Immediate",
+        task: "Fix critical issues",
+        priority: "high",
+        expectedImpact: "Improve rankings",
+      },
+      {
+        phase: "Week 1-2",
+        task: "Resolve high-priority items",
+        priority: "high",
+        expectedImpact: "Better crawlability",
+      },
+      {
+        phase: "Month 1",
+        task: "Address medium-priority issues",
+        priority: "medium",
+        expectedImpact: "Improved UX",
+      },
+    ],
+    kpiPlan: [
+      {
+        metric: "SEO Score",
+        current: `${score}/100`,
+        target30: `${Math.min(score + 15, 100)}/100`,
+        target60: `${Math.min(score + 30, 100)}/100`,
+        target90: `${Math.min(score + 40, 100)}/100`,
+      },
+    ],
+    actionItems: findings.slice(0, 5).map((f, i) => ({
+      rank: i + 1,
+      action: f.issue,
+      impact: f.impact,
+      effort: f.effort,
+      owner: "dev",
+    })),
+    stakeholderSummary: `The audit identified ${findings.length} optimization opportunities. Priority should be given to critical issues for immediate improvement.`,
+    devTaskList: findings
+      .filter((f) => f.severity === "critical" || f.severity === "high")
+      .slice(0, 5)
+      .map((f) => ({
+        task: f.issue,
+        priority: f.severity === "critical" ? "high" : "medium",
+        effort: f.effort,
+        details: f.recommendedFix,
+      })),
+  };
+}
+
+function getCategory(issueType: string): string {
+  if (issueType.includes("title") || issueType.includes("description")) return "Meta Tags";
+  if (issueType.includes("h1") || issueType.includes("heading")) return "Structure";
+  if (issueType.includes("alt")) return "Images";
+  if (issueType.includes("canonical")) return "Technical";
+  if (issueType.includes("https")) return "Security";
+  return "SEO";
+}
+
+function getIssueTitle(issueType: string): string {
+  const titles: any = {
+    missing_title: "Missing page title",
+    short_title: "Title too short",
+    long_title: "Title too long",
+    missing_meta_description: "Missing meta description",
+    short_meta_description: "Meta description too short",
+    long_meta_description: "Meta description too long",
+    missing_h1: "Missing H1 tag",
+    multiple_h1: "Multiple H1 tags",
+    missing_alt_text: "Missing image alt text",
+    missing_canonical: "Missing canonical tag",
+    not_https: "Not using HTTPS",
+  };
+  return titles[issueType] || "SEO issue";
+}
+
+function getRecommendedFix(issueType: string): string {
+  const fixes: any = {
+    missing_title: "Add a descriptive title tag (30-60 characters)",
+    short_title: "Expand title to 30-60 characters",
+    long_title: "Shorten title to under 60 characters",
+    missing_meta_description: "Add meta description (50-160 characters)",
+    short_meta_description: "Expand meta description to 50+ characters",
+    long_meta_description: "Shorten meta description to under 160 characters",
+    missing_h1: "Add one H1 tag per page",
+    multiple_h1: "Keep only one H1 tag per page",
+    missing_alt_text: "Add descriptive alt text to all images",
+    missing_canonical: "Add canonical tag to avoid duplicate content",
+    not_https: "Enable HTTPS/SSL for your domain",
+  };
+  return fixes[issueType] || "Review and fix this issue";
+}
+
+function getPriority(severity: string): number {
+  const priorities: any = {
+    critical: 1,
+    high: 2,
+    medium: 3,
+    low: 4,
+  };
+  return priorities[severity] || 5;
+}
+
+function getAffectedPages(crawlResults: any[], issueType: string): string[] {
+  return crawlResults
+    .filter((r) => (r.issues || []).some((i: any) => i.type === issueType))
+    .map((r) => r.url)
+    .slice(0, 5);
 }
 
 function generateRuleBasedReport(
