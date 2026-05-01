@@ -84,13 +84,28 @@ async function startCrawlBackground(auditId: string, domain: string, maxPages: n
 
     // Use real crawler instead of mock data
     console.log(`Starting real crawl for domain: ${domain}`);
-    const { results, errors } = await crawlWebsite(
-      domain,
-      { maxPages, concurrentRequests: 3, requestDelay: 500 },
-      onProgress
-    );
 
-    console.log(`Crawl completed: ${results.length} pages, ${errors.length} errors`);
+    let results: any[] = [];
+    let errors: string[] = [];
+
+    try {
+      const crawlResult = await crawlWebsite(
+        domain,
+        { maxPages: Math.min(maxPages, 25), concurrentRequests: 5, requestDelay: 200 },
+        onProgress
+      );
+      results = crawlResult.results;
+      errors = crawlResult.errors;
+
+      console.log(`Crawl completed: ${results.length} pages, ${errors.length} errors`);
+
+      if (results.length === 0) {
+        throw new Error(`Failed to crawl domain. No pages found. Errors: ${errors.slice(0, 3).join("; ")}`);
+      }
+    } catch (crawlError) {
+      console.error("Crawl failed:", crawlError);
+      throw crawlError;
+    }
 
     // Save crawl results to database
     for (const result of results) {
