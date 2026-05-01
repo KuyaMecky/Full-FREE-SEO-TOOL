@@ -78,13 +78,6 @@ const NAV: Array<{ label?: string; items: NavItem[] }> = [
     ],
   },
   {
-    label: "Audits",
-    items: [
-      { href: "/audit/new", label: "New Audit", icon: Sparkles },
-      { href: "/history",   label: "History",   icon: History },
-    ],
-  },
-  {
     label: "Workspace",
     items: [
       { href: "/team",              label: "Team",            icon: Users },
@@ -379,9 +372,6 @@ function getTitle(p: string): string {
   if (p === "/content") return "Content Planner";
   if (p === "/content/drafts") return "Content · Drafts";
   if (p.startsWith("/content/drafts/")) return "Draft Editor";
-  if (p === "/audit/new") return "New Audit";
-  if (p.startsWith("/audit/")) return "Audit Report";
-  if (p === "/history") return "Audit History";
   if (p === "/rank-tracker")       return "Rank Tracker";
   if (p === "/cwv-history")        return "Core Web Vitals History";
   if (p === "/redirect-chain")     return "Redirect Chain Auditor";
