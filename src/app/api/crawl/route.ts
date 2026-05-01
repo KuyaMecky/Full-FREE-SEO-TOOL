@@ -91,7 +91,7 @@ async function startCrawlBackground(auditId: string, domain: string, maxPages: n
     try {
       const crawlResult = await crawlWebsite(
         domain,
-        { maxPages: Math.min(maxPages, 25), concurrentRequests: 5, requestDelay: 200 },
+        { maxPages: Math.min(maxPages, 10), concurrentRequests: 2, requestDelay: 800 },
         onProgress
       );
       results = crawlResult.results;
