@@ -51,6 +51,23 @@ export async function POST(request: NextRequest) {
       userId = systemUser.id;
     }
 
+    // Check if domain is connected to GCS (Google Cloud Storage/Search Console)
+    const gcsProperty = await prisma.gscProperty.findFirst({
+      where: {
+        userId,
+        siteUrl: {
+          contains: normalizedDomain,
+        },
+      },
+    });
+
+    if (!gcsProperty) {
+      return NextResponse.json(
+        { error: "Domain must be connected to Google Search Console first" },
+        { status: 403 }
+      );
+    }
+
     const audit = await prisma.audit.create({
       data: {
         userId,
