@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,8 +9,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { X, Plus } from "lucide-react";
+import { X, Plus, AlertCircle } from "lucide-react";
 import { CrawlProgressLive } from "@/app/components/crawl-progress-live";
+
+interface GCSProperty {
+  id: string;
+  siteUrl: string;
+  permissionLevel: string;
+}
 
 const BUSINESS_TYPES = [
   "E-commerce",
@@ -44,8 +50,11 @@ export function AuditInputForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [auditId, setAuditId] = useState<string | null>(null);
+  const [gcsProperties, setGcsProperties] = useState<GCSProperty[]>([]);
+  const [propertiesLoading, setPropertiesLoading] = useState(true);
 
   const [domain, setDomain] = useState("");
+  const [selectedPropertyId, setSelectedPropertyId] = useState("");
   const [country, setCountry] = useState("US");
   const [language, setLanguage] = useState("en");
   const [businessType, setBusinessType] = useState("");
@@ -55,10 +64,40 @@ export function AuditInputForm() {
   const [cmsStack, setCmsStack] = useState("");
   const [maxPages, setMaxPages] = useState(50);
 
+  useEffect(() => {
+    const fetchGcsProperties = async () => {
+      try {
+        const res = await fetch("/api/gcs-properties");
+        if (res.ok) {
+          const data = await res.json();
+          setGcsProperties(data);
+          if (data.length > 0) {
+            setSelectedPropertyId(data[0].id);
+            setDomain(data[0].siteUrl);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load GCS properties:", err);
+      } finally {
+        setPropertiesLoading(false);
+      }
+    };
+
+    fetchGcsProperties();
+  }, []);
+
   const toggleGoal = (goal: string) => {
     setGoals((prev) =>
       prev.includes(goal) ? prev.filter((g) => g !== goal) : [...prev, goal]
     );
+  };
+
+  const handlePropertySelect = (propertyId: string) => {
+    setSelectedPropertyId(propertyId);
+    const selected = gcsProperties.find((p) => p.id === propertyId);
+    if (selected) {
+      setDomain(selected.siteUrl);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -66,7 +105,7 @@ export function AuditInputForm() {
     setError("");
 
     if (!domain.trim()) {
-      setError("Please enter a domain to audit");
+      setError("Please select a domain to audit or connect to Google Search Console");
       return;
     }
 
@@ -125,10 +164,45 @@ export function AuditInputForm() {
         <CardHeader>
           <CardTitle>Target Website</CardTitle>
           <CardDescription>
-            Enter the domain you want to audit
+            Select a site connected to Google Search Console
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {propertiesLoading ? (
+            <div className="text-sm text-gray-500">Loading your sites...</div>
+          ) : gcsProperties.length === 0 ? (
+            <div className="bg-blue-50 border border-blue-200 rounded-md p-4 flex gap-3">
+              <AlertCircle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+              <div className="text-sm text-blue-700">
+                <p className="font-medium mb-1">No sites connected</p>
+                <p className="mb-2">
+                  You need to connect your site to Google Search Console first.
+                </p>
+                <a
+                  href="/properties/connect"
+                  className="inline-block bg-blue-600 text-white px-3 py-1 rounded text-xs hover:bg-blue-700"
+                >
+                  Connect to Google Search Console
+                </a>
+              </div>
+            </div>
+          ) : (
+            <div>
+              <Label htmlFor="property">Select Your Site *</Label>
+              <Select value={selectedPropertyId} onValueChange={handlePropertySelect}>
+                <SelectTrigger className="mt-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {gcsProperties.map((property) => (
+                    <SelectItem key={property.id} value={property.id}>
+                      {property.siteUrl}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           <div>
             <Label htmlFor="domain">Domain *</Label>
             <Input
@@ -137,6 +211,7 @@ export function AuditInputForm() {
               value={domain}
               onChange={(e) => setDomain(e.target.value)}
               className="mt-1"
+              disabled={gcsProperties.length > 0}
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
