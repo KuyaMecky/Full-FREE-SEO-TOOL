@@ -41,7 +41,7 @@ function AuditGooglePageInner() {
 
   const fetchProperties = async () => {
     try {
-      const res = await fetch('/api/gcs-properties');
+      const res = await fetch('/api/gsc/properties');
       if (!res.ok) throw new Error('Failed to fetch properties');
       const data = await res.json();
       setProperties(data);
