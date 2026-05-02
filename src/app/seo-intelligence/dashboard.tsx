@@ -1,23 +1,39 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
-import { AlertTriangle, Zap, Target, TrendingUp, Loader } from "lucide-react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { AlertTriangle, Zap, Target, TrendingUp, Loader, FileText } from "lucide-react";
 
 export default function IntelligenceDashboard() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const auditId = searchParams.get("auditId");
   const [data, setData] = useState<any>(null);
+  const [audits, setAudits] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!auditId) {
-      setLoading(false);
-      return;
+    if (auditId) {
+      loadIntelligence();
+    } else {
+      fetchAudits();
     }
-    loadIntelligence();
   }, [auditId]);
+
+  const fetchAudits = async () => {
+    try {
+      const res = await fetch("/api/audit-google");
+      if (res.ok) {
+        const data = await res.json();
+        setAudits(data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch audits:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const loadIntelligence = async () => {
     try {
@@ -38,10 +54,75 @@ export default function IntelligenceDashboard() {
   };
 
   if (!auditId) {
+    if (loading) {
+      return (
+        <div className="p-8 text-center">
+          <Loader className="h-8 w-8 animate-spin mx-auto" />
+          <p className="mt-4">Loading your audits...</p>
+        </div>
+      );
+    }
+
     return (
-      <div className="p-8 text-center">
-        <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-yellow-600" />
-        <p>No audit selected</p>
+      <div className="max-w-4xl mx-auto p-8">
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold flex items-center gap-3 mb-2">
+            <TrendingUp className="h-10 w-10 text-blue-600" />
+            SEO Intelligence Report
+          </h1>
+          <p className="text-gray-600">Select an audit to view detailed analysis</p>
+        </div>
+
+        {audits.length === 0 ? (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-8 text-center">
+            <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-yellow-600" />
+            <p className="text-yellow-800 font-semibold">No audits found</p>
+            <p className="text-yellow-700 mt-2">Run an audit first to view intelligence reports</p>
+            <button
+              onClick={() => router.push('/audit-google')}
+              className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Run Audit
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <p className="text-sm text-gray-600 mb-4">Your recent audits:</p>
+            {audits.map((audit) => (
+              <button
+                key={audit.id}
+                onClick={() => router.push(`/seo-intelligence?auditId=${audit.id}`)}
+                className="w-full text-left p-6 border border-gray-200 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-all"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <FileText className="h-5 w-5 text-gray-400" />
+                    <div>
+                      <h3 className="font-semibold text-gray-900">{audit.domain}</h3>
+                      <p className="text-sm text-gray-500">
+                        {new Date(audit.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div
+                      className={`text-2xl font-bold ${
+                        audit.overallScore >= 80
+                          ? 'text-green-600'
+                          : audit.overallScore >= 60
+                          ? 'text-yellow-600'
+                          : 'text-red-600'
+                      }`}
+                    >
+                      {audit.overallScore}
+                    </div>
+                    <p className="text-xs text-gray-500">Score</p>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     );
   }
