@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 
 interface Property {
   id: string;
@@ -23,9 +24,11 @@ interface AuditResult {
 }
 
 export default function AuditGooglePage() {
+  const searchParams = useSearchParams();
+  const paramPropertyId = searchParams.get('propertyId');
   const [properties, setProperties] = useState<Property[]>([]);
   const [audits, setAudits] = useState<AuditResult[]>([]);
-  const [selectedPropertyId, setSelectedPropertyId] = useState<string>('');
+  const [selectedPropertyId, setSelectedPropertyId] = useState<string>(paramPropertyId || '');
   const [apiProvider, setApiProvider] = useState<'google' | 'ahrefs'>('google');
   const [loading, setLoading] = useState(false);
   const [auditLoading, setAuditLoading] = useState(false);
@@ -34,7 +37,7 @@ export default function AuditGooglePage() {
   useEffect(() => {
     fetchProperties();
     fetchAudits();
-  }, []);
+  }, [paramPropertyId]);
 
   const fetchProperties = async () => {
     try {
@@ -43,7 +46,11 @@ export default function AuditGooglePage() {
       const data = await res.json();
       setProperties(data);
       if (data.length > 0) {
-        setSelectedPropertyId(data[0].id);
+        // If propertyId is in URL params, use that; otherwise use first property
+        const idToSet = paramPropertyId && data.some((p: Property) => p.id === paramPropertyId)
+          ? paramPropertyId
+          : data[0].id;
+        setSelectedPropertyId(idToSet);
       }
     } catch (err) {
       setError('Failed to load properties');

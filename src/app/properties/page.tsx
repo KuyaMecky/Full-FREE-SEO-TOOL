@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ConnectGoogleButton } from "@/components/properties/connect-google-button";
 import {
   Plus, AlertCircle, Globe, Eye, MousePointerClick,
-  TrendingUp, ArrowRight, CheckCircle, ExternalLink, RotateCcw,
+  TrendingUp, ArrowRight, CheckCircle, ExternalLink, RotateCcw, Zap,
 } from "lucide-react";
 
 interface PropertyListItem {
@@ -199,23 +199,38 @@ function PropertyCard({ property: p }: { property: PropertyListItem }) {
   const posColor = pos <= 3 ? "text-emerald-600 dark:text-emerald-400" : pos <= 10 ? "text-emerald-600 dark:text-emerald-400" : pos <= 20 ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground";
 
   return (
-    <Link href={`/properties/${p.id}`}>
-      <div className="group relative rounded-2xl border border-border bg-card hover:border-primary/30 hover:shadow-md transition-all duration-200 p-5 cursor-pointer overflow-hidden h-full flex flex-col">
-        {/* Subtle hover glow */}
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl" />
+    <div className="group relative rounded-2xl border border-border bg-card hover:border-primary/30 hover:shadow-md transition-all duration-200 p-5 cursor-pointer overflow-hidden h-full flex flex-col">
+      {/* Subtle hover glow */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl" />
 
-        {/* Site info */}
-        <div className="flex items-start gap-3 mb-4 relative">
-          <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/15 transition-colors">
-            <Globe className="h-4 w-4 text-primary" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="font-semibold text-[13px] truncate leading-none">{domain}</p>
-            <p className="text-[11px] text-muted-foreground mt-1">
-              {s ? `Synced ${new Date(s.fetchedAt).toLocaleDateString()}` : "No data yet"}
-            </p>
-          </div>
-          <ArrowRight className="h-4 w-4 text-muted-foreground/30 group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0 mt-0.5" />
+      {/* Site info */}
+      <div className="flex items-start gap-3 mb-4 relative">
+        <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/15 transition-colors">
+          <Globe className="h-4 w-4 text-primary" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="font-semibold text-[13px] truncate leading-none">{domain}</p>
+          <p className="text-[11px] text-muted-foreground mt-1">
+            {s ? `Synced ${new Date(s.fetchedAt).toLocaleDateString()}` : "No data yet"}
+          </p>
+        </div>
+        <Link href={`/properties/${p.id}`}>
+          <ArrowRight className="h-4 w-4 text-muted-foreground/30 group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0 mt-0.5 cursor-pointer" />
+        </Link>
+      </div>
+
+        <div className="flex gap-2 relative mb-4">
+          <Link href={`/properties/${p.id}`} className="flex-1">
+            <button className="w-full text-[12px] font-semibold px-3 py-2 rounded-lg bg-muted hover:bg-muted/80 transition-colors">
+              Details
+            </button>
+          </Link>
+          <Link href={`/audit-google?propertyId=${p.id}`}>
+            <button className="text-[12px] font-semibold px-3 py-2 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 text-blue-600 dark:text-blue-400 transition-colors flex items-center gap-1.5 whitespace-nowrap">
+              <Zap className="h-3.5 w-3.5" />
+              Audit
+            </button>
+          </Link>
         </div>
 
         {s ? (
@@ -258,7 +273,7 @@ function PropertyCard({ property: p }: { property: PropertyListItem }) {
           </div>
         )}
       </div>
-    </Link>
+    </div>
   );
 }
 
