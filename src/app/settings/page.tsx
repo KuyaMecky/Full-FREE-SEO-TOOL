@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   LineChart, ArrowRight, Sparkles, Gauge, Globe, Settings as SettingsIcon,
-  CheckCircle, Circle, ExternalLink, Cpu, Shield, Zap, User, Bell, Webhook, Workflow, Key,
+  CheckCircle, Circle, ExternalLink, Cpu, Shield, Zap, User, Bell, Webhook, Workflow, Key, Link as LinkIcon,
 } from "lucide-react";
 import { APIStatusIndicator } from "@/app/components/api-status-indicator";
 import { ApiKeysManager } from "@/app/components/api-keys-manager";
@@ -14,6 +14,7 @@ interface IntegrationStatus {
   ai: boolean;
   pagespeed: boolean;
   wordpress: boolean;
+  ahrefs: boolean;
 }
 
 const INTEGRATIONS = [
@@ -61,6 +62,17 @@ const INTEGRATIONS = [
     tag: "Optional",
     tagClass: "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20",
   },
+  {
+    key: "ahrefs" as const,
+    href: "/settings/integrations/ahrefs",
+    icon: LinkIcon,
+    iconBg: "bg-cyan-500/10",
+    iconColor: "text-cyan-600 dark:text-cyan-400",
+    label: "Ahrefs API",
+    description: "Connect your Ahrefs account to unlock domain authority, backlink analysis, and organic traffic insights in audits.",
+    tag: "Optional",
+    tagClass: "bg-cyan-50 text-cyan-700 dark:bg-cyan-500/10 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-500/20",
+  },
 ];
 
 const QUICK_LINKS = [
@@ -73,7 +85,7 @@ const QUICK_LINKS = [
 ];
 
 export default function SettingsPage() {
-  const [status, setStatus] = useState<IntegrationStatus>({ google: false, ai: false, pagespeed: false, wordpress: false });
+  const [status, setStatus] = useState<IntegrationStatus>({ google: false, ai: false, pagespeed: false, wordpress: false, ahrefs: false });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -82,12 +94,14 @@ export default function SettingsPage() {
       fetch("/api/settings/ai").then(r => r.ok ? r.json() : null),
       fetch("/api/wordpress/connections").then(r => r.ok ? r.json() : null),
       fetch("/api/gsc/sites").then(r => ({ ok: r.ok })),
-    ]).then(([google, ai, wp, gsc]) => {
+      fetch("/api/settings/ahrefs").then(r => r.ok ? r.json() : null),
+    ]).then(([google, ai, wp, gsc, ahrefs]) => {
       setStatus({
         google: Boolean(google?.configured) || gsc.ok,
         ai: Boolean(ai?.configured),
         pagespeed: Boolean(google?.pagespeedConfigured),
         wordpress: Array.isArray(wp?.connections) && wp.connections.length > 0,
+        ahrefs: Boolean(ahrefs?.configured),
       });
     }).catch(() => {}).finally(() => setLoading(false));
   }, []);
