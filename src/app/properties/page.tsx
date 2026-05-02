@@ -219,60 +219,59 @@ function PropertyCard({ property: p }: { property: PropertyListItem }) {
         </Link>
       </div>
 
-        <div className="flex gap-2 relative mb-4">
-          <Link href={`/properties/${p.id}`} className="flex-1">
-            <button className="w-full text-[12px] font-semibold px-3 py-2 rounded-lg bg-muted hover:bg-muted/80 transition-colors">
-              Details
-            </button>
-          </Link>
-          <Link href={`/audit-google?propertyId=${p.id}`}>
-            <button className="text-[12px] font-semibold px-3 py-2 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 text-blue-600 dark:text-blue-400 transition-colors flex items-center gap-1.5 whitespace-nowrap">
-              <Zap className="h-3.5 w-3.5" />
-              Audit
-            </button>
-          </Link>
-        </div>
+      <div className="flex gap-2 relative mb-4">
+        <Link href={`/properties/${p.id}`} className="flex-1">
+          <button className="w-full text-[12px] font-semibold px-3 py-2 rounded-lg bg-muted hover:bg-muted/80 transition-colors">
+            Details
+          </button>
+        </Link>
+        <Link href={`/audit-google?propertyId=${p.id}`}>
+          <button className="text-[12px] font-semibold px-3 py-2 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 text-blue-600 dark:text-blue-400 transition-colors flex items-center gap-1.5 whitespace-nowrap">
+            <Zap className="h-3.5 w-3.5" />
+            Audit
+          </button>
+        </Link>
+      </div>
 
-        {s ? (
-          <>
-            {/* Stats grid */}
-            <div className="grid grid-cols-2 gap-x-4 gap-y-3 relative flex-1">
-              {[
-                { label: "Impressions", value: s.totalImpressions >= 1000 ? `${(s.totalImpressions/1000).toFixed(1)}k` : s.totalImpressions.toLocaleString() },
-                { label: "Clicks",      value: s.totalClicks >= 1000 ? `${(s.totalClicks/1000).toFixed(1)}k` : s.totalClicks.toLocaleString() },
-                { label: "CTR",         value: `${(s.avgCtr*100).toFixed(2)}%` },
-                { label: "Position",    value: s.avgPosition.toFixed(1), valueClass: posColor },
-              ].map(({ label, value, valueClass }) => (
-                <div key={label}>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">{label}</p>
-                  <p className={`text-[17px] font-bold tabular-nums tracking-tight mt-0.5 ${valueClass ?? ""}`}>{value}</p>
-                </div>
-              ))}
-            </div>
+      {s ? (
+        <>
+          {/* Stats grid */}
+          <div className="grid grid-cols-2 gap-x-4 gap-y-3 relative flex-1">
+            {[
+              { label: "Impressions", value: s.totalImpressions >= 1000 ? `${(s.totalImpressions/1000).toFixed(1)}k` : s.totalImpressions.toLocaleString() },
+              { label: "Clicks",      value: s.totalClicks >= 1000 ? `${(s.totalClicks/1000).toFixed(1)}k` : s.totalClicks.toLocaleString() },
+              { label: "CTR",         value: `${(s.avgCtr*100).toFixed(2)}%` },
+              { label: "Position",    value: s.avgPosition.toFixed(1), valueClass: posColor },
+            ].map(({ label, value, valueClass }) => (
+              <div key={label}>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">{label}</p>
+                <p className={`text-[17px] font-bold tabular-nums tracking-tight mt-0.5 ${valueClass ?? ""}`}>{value}</p>
+              </div>
+            ))}
+          </div>
 
-            {/* Progress bar — CTR visual */}
-            <div className="mt-4 pt-3 border-t border-border/60 relative">
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-[10px] text-muted-foreground font-medium">Click-through rate</span>
-                <span className="text-[10px] font-semibold text-foreground">{(s.avgCtr*100).toFixed(2)}%</span>
-              </div>
-              <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-primary to-violet-500 transition-all duration-700"
-                  style={{ width: `${Math.min(s.avgCtr * 100 * 10, 100)}%` }}
-                />
-              </div>
+          {/* Progress bar — CTR visual */}
+          <div className="mt-4 pt-3 border-t border-border/60 relative">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-[10px] text-muted-foreground font-medium">Click-through rate</span>
+              <span className="text-[10px] font-semibold text-foreground">{(s.avgCtr*100).toFixed(2)}%</span>
             </div>
-          </>
-        ) : (
-          <div className="flex-1 flex items-center justify-center text-center py-4 relative">
-            <div>
-              <p className="text-[12px] text-muted-foreground">No snapshot yet</p>
-              <p className="text-[11px] text-muted-foreground/60 mt-0.5">Open to refresh data</p>
+            <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-primary to-violet-500 transition-all duration-700"
+                style={{ width: `${Math.min(s.avgCtr * 100 * 10, 100)}%` }}
+              />
             </div>
           </div>
-        )}
-      </div>
+        </>
+      ) : (
+        <div className="flex-1 flex items-center justify-center text-center py-4 relative">
+          <div>
+            <p className="text-[12px] text-muted-foreground">No snapshot yet</p>
+            <p className="text-[11px] text-muted-foreground/60 mt-0.5">Open to refresh data</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

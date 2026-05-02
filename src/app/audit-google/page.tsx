@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 
 interface Property {
@@ -23,7 +23,7 @@ interface AuditResult {
   };
 }
 
-export default function AuditGooglePage() {
+function AuditGooglePageInner() {
   const searchParams = useSearchParams();
   const paramPropertyId = searchParams.get('propertyId');
   const [properties, setProperties] = useState<Property[]>([]);
@@ -101,7 +101,7 @@ export default function AuditGooglePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 p-8 space-y-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -256,5 +256,13 @@ export default function AuditGooglePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function AuditGooglePage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 p-8 flex items-center justify-center"><div className="text-slate-400">Loading...</div></div>}>
+      <AuditGooglePageInner />
+    </Suspense>
   );
 }
