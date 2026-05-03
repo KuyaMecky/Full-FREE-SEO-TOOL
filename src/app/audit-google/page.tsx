@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { useProviders, hasAnyProvider } from '@/lib/hooks/useProviders';
 
 interface Property {
   id: string;
@@ -26,6 +27,7 @@ interface AuditResult {
 function AuditGooglePageInner() {
   const searchParams = useSearchParams();
   const paramPropertyId = searchParams.get('propertyId');
+  const { providers, loading: providersLoading } = useProviders();
   const [properties, setProperties] = useState<Property[]>([]);
   const [audits, setAudits] = useState<AuditResult[]>([]);
   const [selectedPropertyId, setSelectedPropertyId] = useState<string>(paramPropertyId || '');
@@ -38,6 +40,15 @@ function AuditGooglePageInner() {
     fetchProperties();
     fetchAudits();
   }, [paramPropertyId]);
+
+  useEffect(() => {
+    // Set default provider based on what's available
+    if (providers && !providers.google && providers.ahrefs) {
+      setApiProvider('ahrefs');
+    } else {
+      setApiProvider('google');
+    }
+  }, [providers]);
 
   const fetchProperties = async () => {
     try {
@@ -128,6 +139,18 @@ function AuditGooglePageInner() {
         <div className="bg-slate-800/50 border border-slate-700/50 rounded-lg p-6 mb-8">
           <h2 className="text-lg font-semibold text-white mb-4">Run New Audit</h2>
 
+          {!hasAnyProvider(providers) && !providersLoading && (
+            <div className="mb-6 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg text-yellow-400">
+              <p className="text-sm">
+                No audit providers configured. Please go to{' '}
+                <a href="/settings/integrations" className="underline hover:text-yellow-300">
+                  Settings → Integrations
+                </a>
+                {' '}to connect an API provider (Google Search Console or Ahrefs).
+              </p>
+            </div>
+          )}
+
           <div className="space-y-4">
             {/* API Provider Selector */}
             <div>
@@ -135,34 +158,41 @@ function AuditGooglePageInner() {
                 Select Audit Provider
               </label>
               <div className="flex gap-2">
-                <label className="flex items-center gap-2 px-4 py-2 rounded cursor-pointer border-2"
-                  style={{
-                    borderColor: apiProvider === 'google' ? '#3b82f6' : '#475569',
-                    backgroundColor: apiProvider === 'google' ? '#1e40af20' : '#64748b20'
-                  }}>
-                  <input
-                    type="radio"
-                    value="google"
-                    checked={apiProvider === 'google'}
-                    onChange={(e) => setApiProvider(e.target.value as 'google' | 'ahrefs')}
-                    className="cursor-pointer"
-                  />
-                  <span className="text-white">Google APIs</span>
-                </label>
-                <label className="flex items-center gap-2 px-4 py-2 rounded cursor-pointer border-2"
-                  style={{
-                    borderColor: apiProvider === 'ahrefs' ? '#3b82f6' : '#475569',
-                    backgroundColor: apiProvider === 'ahrefs' ? '#1e40af20' : '#64748b20'
-                  }}>
-                  <input
-                    type="radio"
-                    value="ahrefs"
-                    checked={apiProvider === 'ahrefs'}
-                    onChange={(e) => setApiProvider(e.target.value as 'google' | 'ahrefs')}
-                    className="cursor-pointer"
-                  />
-                  <span className="text-white">Ahrefs API</span>
-                </label>
+                {providers?.google && (
+                  <label className="flex items-center gap-2 px-4 py-2 rounded cursor-pointer border-2"
+                    style={{
+                      borderColor: apiProvider === 'google' ? '#3b82f6' : '#475569',
+                      backgroundColor: apiProvider === 'google' ? '#1e40af20' : '#64748b20'
+                    }}>
+                    <input
+                      type="radio"
+                      value="google"
+                      checked={apiProvider === 'google'}
+                      onChange={(e) => setApiProvider(e.target.value as 'google' | 'ahrefs')}
+                      className="cursor-pointer"
+                    />
+                    <span className="text-white">Google APIs ✓</span>
+                  </label>
+                )}
+                {providers?.ahrefs && (
+                  <label className="flex items-center gap-2 px-4 py-2 rounded cursor-pointer border-2"
+                    style={{
+                      borderColor: apiProvider === 'ahrefs' ? '#3b82f6' : '#475569',
+                      backgroundColor: apiProvider === 'ahrefs' ? '#1e40af20' : '#64748b20'
+                    }}>
+                    <input
+                      type="radio"
+                      value="ahrefs"
+                      checked={apiProvider === 'ahrefs'}
+                      onChange={(e) => setApiProvider(e.target.value as 'google' | 'ahrefs')}
+                      className="cursor-pointer"
+                    />
+                    <span className="text-white">Ahrefs API ✓</span>
+                  </label>
+                )}
+                {!providers?.google && !providers?.ahrefs && (
+                  <p className="text-slate-400 text-sm py-2">No providers available</p>
+                )}
               </div>
             </div>
 
@@ -193,10 +223,10 @@ function AuditGooglePageInner() {
             {/* Run Button */}
             <button
               onClick={runAudit}
-              disabled={!selectedPropertyId || auditLoading}
+              disabled={!selectedPropertyId || auditLoading || !hasAnyProvider(providers)}
               className="w-full px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-medium rounded transition-colors"
             >
-              {auditLoading ? 'Running Audit...' : 'Run Audit'}
+              {auditLoading ? 'Running Audit...' : !hasAnyProvider(providers) ? 'Configure Provider First' : 'Run Audit'}
             </button>
           </div>
         </div>
