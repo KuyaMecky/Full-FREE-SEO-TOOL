@@ -10,20 +10,36 @@ export async function getAhrefsConfigStatus() {
   try {
     const settings = await prisma.userSettings.findUnique({
       where: { userId: session.id },
-      select: { id: true },
+      select: { ahrefsApiKey: true },
     });
 
-    // Don't expose the actual API key, just whether it's set
-    if (!settings) {
-      return { configured: false };
-    }
-
-    // Check if API key exists by trying to fetch it from env or user record
-    // For now, we'll store it in user settings later
-    return { configured: false };
+    const configured = !!settings?.ahrefsApiKey;
+    return {
+      configured,
+      source: configured ? "db" : null,
+    };
   } catch (error) {
     console.error("Failed to get Ahrefs config:", error);
     return { configured: false };
+  }
+}
+
+export async function getAhrefsApiKey(): Promise<string | null> {
+  const session = await getSession();
+  if (!session?.id) {
+    return null;
+  }
+
+  try {
+    const settings = await prisma.userSettings.findUnique({
+      where: { userId: session.id },
+      select: { ahrefsApiKey: true },
+    });
+
+    return settings?.ahrefsApiKey || null;
+  } catch (error) {
+    console.error("Failed to get Ahrefs API key:", error);
+    return null;
   }
 }
 
@@ -38,16 +54,15 @@ export async function saveAhrefsApiKey(apiKey: string) {
   }
 
   try {
-    // Store in environment or database
-    // For now, we'll use the environment variable
-    // In production, you'd want to encrypt and store this securely
-    process.env.AHREFS_API_KEY = apiKey;
-
-    // Optionally, update user settings to mark that Ahrefs is configured
     await prisma.userSettings.upsert({
       where: { userId: session.id },
-      update: {},
-      create: { userId: session.id },
+      create: {
+        userId: session.id,
+        ahrefsApiKey: apiKey,
+      },
+      update: {
+        ahrefsApiKey: apiKey,
+      },
     });
 
     return { success: true, configured: true };
@@ -64,7 +79,17 @@ export async function clearAhrefsApiKey() {
   }
 
   try {
-    delete process.env.AHREFS_API_KEY;
+    await prisma.userSettings.upsert({
+      where: { userId: session.id },
+      create: {
+        userId: session.id,
+        ahrefsApiKey: null,
+      },
+      update: {
+        ahrefsApiKey: null,
+      },
+    });
+
     return { success: true, configured: false };
   } catch (error) {
     console.error("Failed to clear Ahrefs API key:", error);

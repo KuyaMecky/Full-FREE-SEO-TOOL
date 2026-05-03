@@ -1,45 +1,99 @@
+import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 
-const KEY = "pagespeed_api_key";
+export async function getPagespeedConfigStatus() {
+  const session = await getSession();
+  if (!session?.id) {
+    return { configured: false };
+  }
 
-async function readSetting(): Promise<string | null> {
-  const row = await prisma.settings.findUnique({ where: { key: KEY } });
-  return row?.value || null;
+  try {
+    const settings = await prisma.userSettings.findUnique({
+      where: { userId: session.id },
+      select: { pagespeedApiKey: true },
+    });
+
+    const configured = !!settings?.pagespeedApiKey;
+    return {
+      configured,
+      source: configured ? "db" : null,
+      keyPreview: configured ? "***" : null,
+    };
+  } catch (error) {
+    console.error("Failed to get PageSpeed config:", error);
+    return { configured: false };
+  }
 }
 
-export async function getPagespeedApiKey(): Promise<string | undefined> {
-  const db = await readSetting();
-  const env = process.env.PAGESPEED_API_KEY;
-  return db || env || undefined;
+export async function getPagespeedApiKey(): Promise<string | null> {
+  const session = await getSession();
+  if (!session?.id) {
+    return null;
+  }
+
+  try {
+    const settings = await prisma.userSettings.findUnique({
+      where: { userId: session.id },
+      select: { pagespeedApiKey: true },
+    });
+
+    return settings?.pagespeedApiKey || null;
+  } catch (error) {
+    console.error("Failed to get PageSpeed API key:", error);
+    return null;
+  }
 }
 
-export interface PagespeedConfigStatus {
-  configured: boolean;
-  source: "db" | "env" | null;
-  keyPreview: string | null;
+export async function savePagespeedApiKey(apiKey: string) {
+  const session = await getSession();
+  if (!session?.id) {
+    throw new Error("Unauthorized");
+  }
+
+  if (!apiKey || typeof apiKey !== "string") {
+    throw new Error("Invalid API key");
+  }
+
+  try {
+    await prisma.userSettings.upsert({
+      where: { userId: session.id },
+      create: {
+        userId: session.id,
+        pagespeedApiKey: apiKey,
+      },
+      update: {
+        pagespeedApiKey: apiKey,
+      },
+    });
+
+    return { success: true, configured: true };
+  } catch (error) {
+    console.error("Failed to save PageSpeed API key:", error);
+    throw error;
+  }
 }
 
-function preview(key: string): string {
-  if (key.length <= 10) return "•".repeat(key.length);
-  return `${key.slice(0, 6)}…${key.slice(-4)}`;
-}
+export async function clearPagespeedApiKey() {
+  const session = await getSession();
+  if (!session?.id) {
+    throw new Error("Unauthorized");
+  }
 
-export async function getPagespeedConfigStatus(): Promise<PagespeedConfigStatus> {
-  const db = await readSetting();
-  if (db) return { configured: true, source: "db", keyPreview: preview(db) };
-  const env = process.env.PAGESPEED_API_KEY;
-  if (env) return { configured: true, source: "env", keyPreview: preview(env) };
-  return { configured: false, source: null, keyPreview: null };
-}
+  try {
+    await prisma.userSettings.upsert({
+      where: { userId: session.id },
+      create: {
+        userId: session.id,
+        pagespeedApiKey: null,
+      },
+      update: {
+        pagespeedApiKey: null,
+      },
+    });
 
-export async function savePagespeedApiKey(key: string): Promise<void> {
-  await prisma.settings.upsert({
-    where: { key: KEY },
-    create: { key: KEY, value: key.trim() },
-    update: { value: key.trim() },
-  });
-}
-
-export async function clearPagespeedApiKey(): Promise<void> {
-  await prisma.settings.delete({ where: { key: KEY } }).catch(() => undefined);
+    return { success: true, configured: false };
+  } catch (error) {
+    console.error("Failed to clear PageSpeed API key:", error);
+    throw error;
+  }
 }
