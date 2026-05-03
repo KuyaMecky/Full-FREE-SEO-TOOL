@@ -42,14 +42,22 @@ function AuditGooglePageInner() {
   const fetchProperties = async () => {
     try {
       const res = await fetch('/api/gsc/properties');
-      if (!res.ok) throw new Error('Failed to fetch properties');
+      if (!res.ok) {
+        if (res.status === 401) {
+          setError('Please log in to access audits');
+        } else {
+          throw new Error('Failed to fetch properties');
+        }
+        return;
+      }
       const data = await res.json();
-      setProperties(data);
-      if (data.length > 0) {
+      const props = data.properties || data;
+      setProperties(props);
+      if (props.length > 0) {
         // If propertyId is in URL params, use that; otherwise use first property
-        const idToSet = paramPropertyId && data.some((p: Property) => p.id === paramPropertyId)
+        const idToSet = paramPropertyId && props.some((p: Property) => p.id === paramPropertyId)
           ? paramPropertyId
-          : data[0].id;
+          : props[0].id;
         setSelectedPropertyId(idToSet);
       }
     } catch (err) {
