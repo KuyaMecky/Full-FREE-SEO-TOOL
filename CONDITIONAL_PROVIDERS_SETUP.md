@@ -84,26 +84,37 @@ if (providers?.google && providers?.ahrefs) {
 }
 ```
 
+## Completed
+
+✅ **Ahrefs Audit Endpoint** (done)
+- File: `src/app/api/audit-ahrefs/route.ts`
+- Accepts POST with propertyId
+- Calls Ahrefs API with stored key from UserSettings
+- Generates audit with domain metrics analysis
+- Saves results to Audit, Finding, AuditReport models
+
+✅ **Ahrefs Client Library** (done)
+- File: `src/lib/ahrefs/client.ts`
+- Domain metrics fetching
+- Backlinks analysis
+- Weighted scoring algorithm (0-100)
+- Issue detection
+
 ## Next Steps (To Complete Setup)
 
-### 1. **Create Settings UI** (not done yet)
+### 1. **Create Settings UI** (NOT DONE YET)
 - File: `src/app/settings/integrations/page.tsx`
 - Should show:
   - Google: "Connected as [email]" or "Connect" button
   - Ahrefs: Text input for API key (paste)
   - PageSpeed: Text input for API key (paste)
-  - Test buttons for each
+  - Save/test buttons for each
+  - This unlocks Ahrefs audit in audit page
 
-### 2. **Ahrefs Audit Endpoint** (not done yet)
-- File: `src/app/api/audit-ahrefs/route.ts`
-- Should accept POST with propertyId
-- Call Ahrefs API with stored key
-- Save audit results to DB
-
-### 3. **Fix Pre-Existing Issue**
+### 2. **Fix Pre-Existing Issue**
 - File: `src/app/components/use-ahrefs-data.ts`
 - Contains JSX but named `.ts` (should be `.tsx`)
-- Not urgent - doesn't affect new code
+- Low priority - doesn't block functionality
 
 ## Testing
 
