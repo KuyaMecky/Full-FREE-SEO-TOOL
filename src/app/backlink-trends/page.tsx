@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Upload, TrendingUp, TrendingDown, Link2 } from 'lucide-react';
@@ -34,7 +34,7 @@ interface BacklinkHistory {
   totalSnapshots: number;
 }
 
-export default function BacklinkTrendsPage() {
+function BacklinkTrendsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const propertyId = searchParams.get('propertyId');
@@ -379,5 +379,13 @@ export default function BacklinkTrendsPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function BacklinkTrendsPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center">Loading...</div>}>
+      <BacklinkTrendsContent />
+    </Suspense>
   );
 }

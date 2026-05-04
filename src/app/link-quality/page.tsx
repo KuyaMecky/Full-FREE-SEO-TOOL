@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { AlertTriangle, CheckCircle, AlertCircle, Shield, Download } from 'lucide-react';
@@ -46,7 +46,7 @@ interface AnalysisResult {
   };
 }
 
-export default function LinkQualityPage() {
+function LinkQualityContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const propertyId = searchParams.get('propertyId');
@@ -423,5 +423,13 @@ export default function LinkQualityPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function LinkQualityPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center">Loading...</div>}>
+      <LinkQualityContent />
+    </Suspense>
   );
 }

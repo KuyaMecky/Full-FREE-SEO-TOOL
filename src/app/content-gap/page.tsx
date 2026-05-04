@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
@@ -27,7 +27,7 @@ interface AnalysisResult {
   };
 }
 
-export default function ContentGapPage() {
+function ContentGapContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const propertyId = searchParams.get('propertyId');
@@ -389,5 +389,13 @@ export default function ContentGapPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function ContentGapPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center">Loading...</div>}>
+      <ContentGapContent />
+    </Suspense>
   );
 }
