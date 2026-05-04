@@ -1,16 +1,19 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
-import { Zap, CheckCircle, AlertCircle, Loader } from "lucide-react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { Zap, CheckCircle, AlertCircle, Loader, AlertTriangle } from "lucide-react";
 
 function BulkOperationsContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const auditId = searchParams.get("auditId");
+  const [audits, setAudits] = useState<any[]>([]);
+  const [selectedAuditId, setSelectedAuditId] = useState(auditId || "");
   const [issues, setIssues] = useState<any[]>([]);
   const [selectedPages, setSelectedPages] = useState<Set<string>>(new Set());
   const [selectedOperation, setSelectedOperation] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [completed, setCompleted] = useState(false);
   const [results, setResults] = useState<any>(null);
