@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ConnectGoogleButton } from "@/components/properties/connect-google-button";
 import {
   Plus, AlertCircle, Globe, Eye, MousePointerClick,
-  TrendingUp, ArrowRight, CheckCircle, ExternalLink, RotateCcw, Zap,
+  TrendingUp, ArrowRight, CheckCircle, ExternalLink, RotateCcw, Zap, LogOut,
 } from "lucide-react";
 
 interface PropertyListItem {
@@ -82,6 +82,18 @@ function PropertiesPageInner() {
     }
   };
 
+  const handleDisconnect = async () => {
+    if (!confirm("Disconnect Google Search Console? All properties will be removed and you can connect a different account.")) return;
+    try {
+      const res = await fetch("/api/google/disconnect", { method: "POST" });
+      if (res.ok) {
+        await fetchProperties();
+      }
+    } catch (error) {
+      console.error("Disconnect failed:", error);
+    }
+  };
+
   useEffect(() => {
     fetchProperties();
   }, []);
@@ -116,6 +128,14 @@ function PropertiesPageInner() {
                 Add property
               </button>
             </Link>
+            <button
+              onClick={handleDisconnect}
+              className="inline-flex items-center gap-1.5 text-[13px] font-semibold px-4 py-2 rounded-xl bg-red-500/10 text-red-600 hover:bg-red-500/20 transition-colors border border-red-200/50 dark:border-red-500/30"
+              title="Disconnect Google Search Console account and remove all properties"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+              Disconnect
+            </button>
           </div>
         )}
       </div>
