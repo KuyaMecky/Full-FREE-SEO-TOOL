@@ -41,28 +41,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate the API key by making a test request
-    try {
-      const res = await fetch("https://api.ahrefs.com/v3/site-overview?target=example.com&mode=domain", {
-        headers: { Authorization: `Bearer ${apiKey}` },
-      });
-
-      if (!res.ok && res.status !== 404) {
-        // 404 is fine, it means the API key is valid but domain doesn't exist
-        throw new Error("Invalid API key");
-      }
-    } catch (error) {
-      // If it's a network error, still allow saving (could be network issue)
-      if (error instanceof TypeError) {
-        console.error("Network error validating API key:", error);
-      } else {
-        return NextResponse.json(
-          { error: "Invalid Ahrefs API key" },
-          { status: 400 }
-        );
-      }
-    }
-
     await saveAhrefsApiKey(apiKey);
     const status = await getAhrefsConfigStatus();
     return NextResponse.json(status);

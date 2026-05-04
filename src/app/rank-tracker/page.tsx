@@ -51,7 +51,7 @@ export default function RankTrackerPage() {
 
   const loadKeywords = async () => {
     try {
-      const res = await fetch(\/api/rank-tracking/keywords?propertyId=\\);
+      const res = await fetch(`/api/rank-tracking/keywords?propertyId=${selectedProperty}`);
       if (res.ok) {
         const data = await res.json();
         setKeywords(data.keywords || []);
@@ -87,7 +87,7 @@ export default function RankTrackerPage() {
   const deleteKeyword = async (id: string) => {
     if (!confirm('Remove keyword?')) return;
     try {
-      await fetch(\/api/rank-tracking/keywords?keywordId=\\, { method: 'DELETE' });
+      await fetch(`/api/rank-tracking/keywords?keywordId=${id}`, { method: 'DELETE' });
       loadKeywords();
     } catch (error) {
       setMessage({ type: 'error', text: 'Failed to delete' });
@@ -105,7 +105,7 @@ export default function RankTrackerPage() {
       });
       if (res.ok) {
         const data = await res.json();
-        setMessage({ type: 'success', text: \Updated \ keywords\ });
+        setMessage({ type: 'success', text: `Updated ${data.updates} keywords` });
         loadKeywords();
       }
     } finally {

@@ -240,9 +240,10 @@ function AuditGooglePageInner() {
           ) : (
             <div className="space-y-4">
               {audits.map((audit) => (
-                <div
+                <a
                   key={audit.id}
-                  className="bg-slate-700/50 border border-slate-600/50 rounded-lg p-4 hover:border-slate-500/50 transition-colors"
+                  href={`/audit-results/${audit.id}`}
+                  className="block bg-slate-700/50 border border-slate-600/50 rounded-lg p-4 hover:border-blue-500/50 hover:bg-slate-700 transition-colors cursor-pointer"
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div>
@@ -287,7 +288,7 @@ function AuditGooglePageInner() {
                       )}
                     </div>
                   )}
-                </div>
+                </a>
               ))}
             </div>
           )}

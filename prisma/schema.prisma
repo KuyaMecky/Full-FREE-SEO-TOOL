@@ -76,6 +76,7 @@ model GscProperty {
   rankKeywords       RankKeyword[]
   pageSnapshots      PageSnapshot[]
   contentAutomations ContentAutomation[]
+  backlinkSnapshots  BacklinkSnapshot[]
 
   @@unique([googleAccountId, siteUrl])
   @@index([userId])
@@ -777,5 +778,22 @@ model ProgressMetric {
 
   @@index([auditId, metricType])
   @@index([userId, recordedAt])
+}
+
+model BacklinkSnapshot {
+  id               String   @id @default(cuid())
+  propertyId       String
+  records          String   @db.Text // JSON array of backlink records
+  totalBacklinks   Int      @default(0)
+  referringDomains Int      @default(0)
+  topReferrers     String   @default("[]") // JSON array of top referrers
+  gainedCount      Int      @default(0)
+  lostCount        Int      @default(0)
+  date             DateTime
+  uploadedAt       DateTime @default(now())
+  property         GscProperty @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([propertyId, date])
+  @@index([uploadedAt])
 }
 
