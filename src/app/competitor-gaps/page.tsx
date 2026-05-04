@@ -1,28 +1,49 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
-import { Target, TrendingUp, Zap } from "lucide-react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { Target, TrendingUp, Zap, AlertTriangle } from "lucide-react";
 
 function CompetitorGapsContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const auditId = searchParams.get("auditId");
   const [data, setData] = useState<any>(null);
+  const [audits, setAudits] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [selectedAuditId, setSelectedAuditId] = useState(auditId || "");
 
   useEffect(() => {
-    if (!auditId) return;
-    loadData();
-  }, [auditId]);
+    if (!selectedAuditId) {
+      fetchAudits();
+    } else {
+      loadData();
+    }
+  }, [selectedAuditId]);
+
+  const fetchAudits = async () => {
+    try {
+      const res = await fetch("/api/audit-google");
+      if (res.ok) {
+        const auditData = await res.json();
+        setAudits(auditData);
+      }
+    } catch (err) {
+      console.error("Failed to fetch audits:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const loadData = async () => {
     try {
       setLoading(true);
+      setError("");
       const res = await fetch("/api/intelligence/competitor-gaps", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ auditId }),
+        body: JSON.stringify({ auditId: selectedAuditId }),
       });
       if (!res.ok) throw new Error("Failed to load");
       const result = await res.json();
@@ -34,8 +55,66 @@ function CompetitorGapsContent() {
     }
   };
 
-  if (!auditId)
-    return <div className="p-8 text-center">No audit selected</div>;
+  if (!selectedAuditId) {
+    if (loading) {
+      return (
+        <div className="p-8 text-center">
+          <TrendingUp className="h-8 w-8 animate-spin mx-auto" />
+          <p className="mt-4">Loading your audits...</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="max-w-4xl mx-auto p-8">
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold flex items-center gap-3 mb-2">
+            <Target className="h-10 w-10 text-green-600" />
+            Competitor Gap Analysis
+          </h1>
+          <p className="text-gray-600">Select an audit to analyze competitor gaps</p>
+        </div>
+
+        {audits.length === 0 ? (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-8 text-center">
+            <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-green-600" />
+            <p className="text-green-800 font-semibold">No audits found</p>
+            <p className="text-green-700 mt-2">Run an audit first to analyze competitor gaps</p>
+            <button
+              onClick={() => router.push('/audit-google')}
+              className="mt-4 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+            >
+              Run Audit
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <p className="text-sm text-gray-600 mb-4">Your recent audits:</p>
+            {audits.map((audit) => (
+              <button
+                key={audit.id}
+                onClick={() => setSelectedAuditId(audit.id)}
+                className="w-full text-left p-6 border border-gray-200 rounded-lg hover:border-green-400 hover:bg-green-50 transition-all"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-semibold text-gray-900">{audit.domain}</h3>
+                    <p className="text-sm text-gray-500">
+                      {new Date(audit.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-2xl font-bold text-green-600">{audit.overallScore}</div>
+                    <p className="text-xs text-gray-500">Score</p>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   if (loading)
     return (
