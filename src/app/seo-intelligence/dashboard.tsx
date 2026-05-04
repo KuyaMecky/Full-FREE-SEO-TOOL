@@ -12,14 +12,15 @@ export default function IntelligenceDashboard() {
   const [audits, setAudits] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [selectedAuditId, setSelectedAuditId] = useState<string>(auditId || "");
 
   useEffect(() => {
-    if (auditId) {
+    if (selectedAuditId) {
       loadIntelligence();
     } else {
       fetchAudits();
     }
-  }, [auditId]);
+  }, [selectedAuditId]);
 
   const fetchAudits = async () => {
     try {
@@ -37,23 +38,27 @@ export default function IntelligenceDashboard() {
 
   const loadIntelligence = async () => {
     try {
+      setLoading(true);
+      setError("");
       await fetch("/api/intelligence/recommendations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ auditId }),
+        body: JSON.stringify({ auditId: selectedAuditId }),
       });
 
-      const res = await fetch(`/api/intelligence/priorities?auditId=${auditId}`);
+      const res = await fetch(`/api/intelligence/priorities?auditId=${selectedAuditId}`);
+      if (!res.ok) throw new Error("Failed to fetch analysis");
       const result = await res.json();
       setData(result);
     } catch (err) {
-      setError("Failed to load analysis");
+      console.error("Error loading intelligence:", err);
+      setError("Failed to load analysis. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  if (!auditId) {
+  if (!selectedAuditId) {
     if (loading) {
       return (
         <div className="p-8 text-center">
@@ -91,7 +96,7 @@ export default function IntelligenceDashboard() {
             {audits.map((audit) => (
               <button
                 key={audit.id}
-                onClick={() => router.push(`/seo-intelligence?auditId=${audit.id}`)}
+                onClick={() => setSelectedAuditId(audit.id)}
                 className="w-full text-left p-6 border border-gray-200 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-all"
               >
                 <div className="flex items-center justify-between">
