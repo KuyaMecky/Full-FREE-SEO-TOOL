@@ -8,11 +8,16 @@ export async function POST() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  await prisma.googleAccount
-    .delete({ where: { userId: session.id } })
-    .catch(() => {
-      // nothing to delete
-    });
+  try {
+    await prisma.googleAccount.delete({ where: { userId: session.id } });
+  } catch (error: any) {
+    if (error.code === "P2025") {
+      // Record not found — this is okay
+      return NextResponse.json({ success: true, message: "No account to disconnect" });
+    }
+    console.error("Disconnect failed:", error);
+    return NextResponse.json({ error: "Failed to disconnect" }, { status: 500 });
+  }
 
   return NextResponse.json({ success: true });
 }

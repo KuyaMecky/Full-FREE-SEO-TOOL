@@ -53,6 +53,7 @@ function PropertiesPageInner() {
   const [googleConfigured, setGoogleConfigured] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [disconnecting, setDisconnecting] = useState(false);
 
   const fetchProperties = async () => {
     try {
@@ -84,13 +85,20 @@ function PropertiesPageInner() {
 
   const handleDisconnect = async () => {
     if (!confirm("Disconnect Google Search Console? All properties will be removed and you can connect a different account.")) return;
+    setDisconnecting(true);
     try {
       const res = await fetch("/api/google/disconnect", { method: "POST" });
       if (res.ok) {
         await fetchProperties();
+      } else {
+        const data = await res.json();
+        alert(`Error: ${data.error || "Failed to disconnect"}`);
       }
     } catch (error) {
       console.error("Disconnect failed:", error);
+      alert("Connection error. Please try again.");
+    } finally {
+      setDisconnecting(false);
     }
   };
 
@@ -130,11 +138,12 @@ function PropertiesPageInner() {
             </Link>
             <button
               onClick={handleDisconnect}
-              className="inline-flex items-center gap-1.5 text-[13px] font-semibold px-4 py-2 rounded-xl bg-red-500/10 text-red-600 hover:bg-red-500/20 transition-colors border border-red-200/50 dark:border-red-500/30"
+              disabled={disconnecting}
+              className="inline-flex items-center gap-1.5 text-[13px] font-semibold px-4 py-2 rounded-xl bg-red-500/10 text-red-600 hover:bg-red-500/20 transition-colors border border-red-200/50 dark:border-red-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
               title="Disconnect Google Search Console account and remove all properties"
             >
-              <LogOut className="h-3.5 w-3.5" />
-              Disconnect
+              <LogOut className={`h-3.5 w-3.5 ${disconnecting ? "animate-spin" : ""}`} />
+              {disconnecting ? "Disconnecting..." : "Disconnect"}
             </button>
           </div>
         )}
