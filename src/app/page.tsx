@@ -5,7 +5,7 @@ import Link from "next/link";
 import {
   Search, BarChart3, LineChart, ArrowRight, ArrowUp, ArrowDown,
   Plus, Eye, MousePointerClick, Percent, TrendingUp, Globe,
-  PenLine, Activity, Target, Zap, KeyRound, Users,
+  PenLine, Activity, Target, Zap, KeyRound, Users, Trash2,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -43,6 +43,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [sortKey, setSortKey] = useState<SortKey>("impressions");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [deletingAudit, setDeletingAudit] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -56,6 +57,24 @@ export default function HomePage() {
       } finally { setLoading(false); }
     })();
   }, []);
+
+  const handleDeleteAudit = async (id: string, domain: string) => {
+    if (!confirm(`Delete audit for "${domain}"? This action cannot be undone.`)) return;
+    setDeletingAudit(id);
+    try {
+      const res = await fetch(`/api/audits/${id}/delete`, { method: "DELETE" });
+      if (res.ok) {
+        setAudits(a => a.filter(x => x.id !== id));
+      } else {
+        alert("Failed to delete audit");
+      }
+    } catch (error) {
+      console.error("Delete failed:", error);
+      alert("Error deleting audit");
+    } finally {
+      setDeletingAudit(null);
+    }
+  };
 
   if (loading) {
     return (
@@ -148,8 +167,8 @@ export default function HomePage() {
           </div>
           <div className="rounded-lg border border-border overflow-hidden divide-y divide-border bg-card">
             {audits.slice(0, 5).map(a => (
-              <Link key={a.id} href={`/audit/${a.id}`}>
-                <div className="flex items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors group">
+              <div key={a.id} className="flex items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors group">
+                <Link href={`/audit/${a.id}`} className="flex-1 min-w-0">
                   <div className="flex items-center gap-3 min-w-0">
                     <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${STATUS_DOT[a.status] ?? "bg-muted-foreground"}`} />
                     <p className="text-[13px] font-medium truncate">{a.domain}</p>
@@ -158,9 +177,24 @@ export default function HomePage() {
                       {a.overallScore != null && ` · ${Math.round(a.overallScore)}/100`}
                     </p>
                   </div>
-                  <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/30 group-hover:text-primary transition-colors shrink-0" />
+                </Link>
+                <div className="flex items-center gap-2 ml-2">
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleDeleteAudit(a.id, a.domain);
+                    }}
+                    disabled={deletingAudit === a.id}
+                    className="p-1.5 rounded hover:bg-red-500/10 text-red-600 dark:text-red-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="Delete audit"
+                  >
+                    <Trash2 className={`h-3.5 w-3.5 ${deletingAudit === a.id ? "animate-spin" : ""}`} />
+                  </button>
+                  <Link href={`/audit/${a.id}`}>
+                    <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/30 group-hover:text-primary transition-colors shrink-0" />
+                  </Link>
                 </div>
-              </Link>
+              </div>
             ))}
           </div>
         </section>

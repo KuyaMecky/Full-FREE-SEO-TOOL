@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ConnectGoogleButton } from "@/components/properties/connect-google-button";
 import {
   Plus, AlertCircle, Globe, Eye, MousePointerClick,
-  TrendingUp, ArrowRight, CheckCircle, ExternalLink, RotateCcw, Zap, LogOut,
+  TrendingUp, ArrowRight, CheckCircle, ExternalLink, RotateCcw, Zap, LogOut, Trash2,
 } from "lucide-react";
 
 interface PropertyListItem {
@@ -80,6 +80,21 @@ function PropertiesPageInner() {
       await fetchProperties();
     } finally {
       setRefreshing(false);
+    }
+  };
+
+  const handleDeleteProperty = async (id: string, siteUrl: string) => {
+    if (!confirm(`Delete property "${siteUrl}"? This action cannot be undone.`)) return;
+    try {
+      const res = await fetch(`/api/gsc/properties/${id}/delete`, { method: "DELETE" });
+      if (res.ok) {
+        await fetchProperties();
+      } else {
+        alert("Failed to delete property");
+      }
+    } catch (error) {
+      console.error("Delete failed:", error);
+      alert("Error deleting property");
     }
   };
 
@@ -179,7 +194,7 @@ function PropertiesPageInner() {
         <>
           <PortfolioStrip properties={properties} />
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {properties.map((p) => <PropertyCard key={p.id} property={p} />)}
+            {properties.map((p) => <PropertyCard key={p.id} property={p} onDelete={handleDeleteProperty} />)}
           </div>
         </>
       )}
@@ -221,7 +236,7 @@ function PortfolioStrip({ properties }: { properties: PropertyListItem[] }) {
   );
 }
 
-function PropertyCard({ property: p }: { property: PropertyListItem }) {
+function PropertyCard({ property: p, onDelete }: { property: PropertyListItem; onDelete: (id: string, siteUrl: string) => void }) {
   const domain = p.siteUrl.replace(/^https?:\/\//, "").replace(/^sc-domain:/, "").replace(/\/$/, "");
   const s = p.latestSnapshot;
   const pos = s?.avgPosition ?? 0;
@@ -260,6 +275,13 @@ function PropertyCard({ property: p }: { property: PropertyListItem }) {
             Audit
           </button>
         </Link>
+        <button
+          onClick={() => onDelete(p.id, p.siteUrl)}
+          className="text-[12px] font-semibold px-3 py-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 transition-colors flex items-center gap-1.5 whitespace-nowrap"
+          title="Delete this property"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </button>
       </div>
 
       {s ? (
