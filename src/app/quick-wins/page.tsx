@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Target, ArrowUp, ArrowDown, Search, TrendingUp, FileText, X } from "lucide-react";
+import { Target, ArrowUp, ArrowDown, Search, TrendingUp, FileText, X, RefreshCw } from "lucide-react";
 
 interface QuickWin {
   propertyId: string;
@@ -241,26 +241,44 @@ export default function QuickWinsPage() {
   const [totalProps, setTotalProps] = useState(0);
   const [propsWithData, setPropsWithData] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("opportunity");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [selectedWin, setSelectedWin] = useState<QuickWin | null>(null);
 
+  const fetchWins = async () => {
+    try {
+      const res = await fetch("/api/tools/quick-wins");
+      if (res.ok) {
+        const data = await res.json();
+        setWins(data.wins);
+        setTotalProps(data.totalProperties);
+        setPropsWithData(data.propertiesWithData);
+      }
+    } catch (error) {
+      console.error("Failed to fetch quick wins:", error);
+    }
+  };
+
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch("/api/tools/quick-wins");
-        if (res.ok) {
-          const data = await res.json();
-          setWins(data.wins);
-          setTotalProps(data.totalProperties);
-          setPropsWithData(data.propertiesWithData);
-        }
+        await fetchWins();
       } finally {
         setLoading(false);
       }
     })();
   }, []);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await fetchWins();
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const sorted = useMemo(() => {
     const filtered = filter
@@ -334,14 +352,24 @@ export default function QuickWinsPage() {
   return (
     <>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold flex items-center gap-3 mb-2 text-gray-900">
-            <Target className="h-10 w-10 text-emerald-600" />
-            Quick Wins
-          </h1>
-          <p className="text-gray-600">
-            Queries ranking positions 4-20 with real impressions. Fastest opportunities to reach page 1. Click any query to see content ideas.
-          </p>
+        <div className="mb-8 flex items-start justify-between">
+          <div>
+            <h1 className="text-4xl font-bold flex items-center gap-3 mb-2 text-gray-900">
+              <Target className="h-10 w-10 text-emerald-600" />
+              Quick Wins
+            </h1>
+            <p className="text-gray-600">
+              Queries ranking positions 4-20 with real impressions. Fastest opportunities to reach page 1. Click any query to see content ideas.
+            </p>
+          </div>
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded border border-gray-300 hover:bg-gray-100 transition-colors disabled:opacity-50"
+            title="Refresh quick wins"
+          >
+            <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+          </button>
         </div>
 
         {loading ? (

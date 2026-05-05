@@ -135,6 +135,14 @@ function PropertiesPageInner() {
         </div>
         {hasGoogle && (
           <div className="flex items-center gap-2">
+            <button
+              onClick={fetchProperties}
+              className="inline-flex items-center gap-1.5 text-[13px] font-semibold px-4 py-2 rounded-xl bg-muted text-foreground hover:bg-muted/80 transition-colors"
+              title="Refresh properties list"
+            >
+              <RotateCcw className="h-3.5 w-3.5" />
+              Sync
+            </button>
             {properties.length > 0 && (
               <button
                 onClick={handleRefreshAll}
@@ -142,7 +150,7 @@ function PropertiesPageInner() {
                 className="inline-flex items-center gap-1.5 text-[13px] font-semibold px-4 py-2 rounded-xl bg-muted text-foreground hover:bg-muted/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <RotateCcw className={`h-3.5 w-3.5 ${refreshing ? "animate-spin" : ""}`} />
-                {refreshing ? "Refreshing..." : "Refresh"}
+                {refreshing ? "Refreshing..." : "Refresh GSC"}
               </button>
             )}
             <Link href="/properties/connect">

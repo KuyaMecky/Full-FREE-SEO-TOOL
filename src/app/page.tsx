@@ -5,7 +5,7 @@ import Link from "next/link";
 import {
   Search, BarChart3, LineChart, ArrowRight, ArrowUp, ArrowDown,
   Plus, Eye, MousePointerClick, Percent, TrendingUp, Globe,
-  PenLine, Activity, Target, Zap, KeyRound, Users, Trash2,
+  PenLine, Activity, Target, Zap, KeyRound, Users, Trash2, RefreshCw,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -41,9 +41,20 @@ export default function HomePage() {
   const [audits, setAudits] = useState<Audit[]>([]);
   const [properties, setProperties] = useState<PropertyItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>("impressions");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [deletingAudit, setDeletingAudit] = useState<string | null>(null);
+
+  const fetchData = async () => {
+    try {
+      const [ar, pr] = await Promise.all([fetch("/api/audit"), fetch("/api/gsc/properties")]);
+      if (ar.ok) setAudits(await ar.json());
+      if (pr.ok) setProperties((await pr.json()).properties ?? []);
+    } catch (error) {
+      console.error("Failed to refresh:", error);
+    }
+  };
 
   useEffect(() => {
     (async () => {
@@ -51,12 +62,19 @@ export default function HomePage() {
         const me = await fetch("/api/auth/me");
         if (!me.ok) return;
         setUser((await me.json()).user);
-        const [ar, pr] = await Promise.all([fetch("/api/audit"), fetch("/api/gsc/properties")]);
-        if (ar.ok) setAudits(await ar.json());
-        if (pr.ok) setProperties((await pr.json()).properties ?? []);
+        await fetchData();
       } finally { setLoading(false); }
     })();
   }, []);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await fetchData();
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const handleDeleteAudit = async (id: string, domain: string) => {
     if (!confirm(`Delete audit for "${domain}"? This action cannot be undone.`)) return;
@@ -106,6 +124,14 @@ export default function HomePage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="flex items-center gap-1.5 text-[12px] font-medium px-3 py-1.5 rounded border border-border hover:bg-muted transition-colors disabled:opacity-50"
+            title="Refresh data"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? "animate-spin" : ""}`} />
+          </button>
           <Link href="/properties/connect">
             <button className="flex items-center gap-1.5 text-[12px] font-medium px-3 py-1.5 rounded border border-border hover:bg-muted transition-colors">
               <Plus className="h-3.5 w-3.5" /> Add property
