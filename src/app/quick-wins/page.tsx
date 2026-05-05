@@ -54,6 +54,7 @@ function ContentSuggestionsModal({
 }) {
   const [plan, setPlan] = useState<ContentPlan | null>(null);
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     const fetchSuggestions = async () => {
@@ -94,6 +95,33 @@ function ContentSuggestionsModal({
         return "bg-purple-100 text-purple-800";
       default:
         return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const handleExport = async () => {
+    if (!plan) return;
+    setExporting(true);
+    try {
+      const res = await fetch("/api/content-planner/export", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          propertyId: win.propertyId,
+          keyword: win.query,
+          suggestions: plan.suggestions,
+        }),
+      });
+      if (res.ok) {
+        alert("Exported to content planner!");
+        onClose();
+      } else {
+        alert("Failed to export");
+      }
+    } catch (error) {
+      console.error("Export failed:", error);
+      alert("Error exporting");
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -190,8 +218,12 @@ function ContentSuggestionsModal({
                 <p className="text-sm text-gray-900 mb-3">
                   Ready to create content? Export these ideas to your content planner.
                 </p>
-                <button className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition text-sm font-semibold">
-                  Export to Content Planner
+                <button
+                  onClick={handleExport}
+                  disabled={exporting}
+                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {exporting ? "Exporting..." : "Export to Content Planner"}
                 </button>
               </div>
             </>
